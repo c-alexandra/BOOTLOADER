@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "rcc.h": "c"
+    },
+    "makefile.makefilePath": "app/makefile"
+}
