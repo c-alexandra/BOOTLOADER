@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "rcc.h": "c"
+        "rcc.h": "c",
+        "system.h": "c"
     },
     "makefile.makefilePath": "app/makefile"
 }
