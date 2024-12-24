@@ -1,12 +1,26 @@
+/*******************************************************************************
+ * @file   system.c
+ * @author Camille Alexandra
+ *
+ * @brief  
+ ******************************************************************************/
+
+// External library includes
 #include <libopencm3/stm32/rcc.h> // rcc_clock, rcc_periph
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/nvic.h> // sys_tick_handler
 
-#include "../../inc/common.h"
+// User includes
+#include "../../shared/inc/common.h"
 #include "../../inc/core/system.h"
 
+// Defines & Macros
+
+// Global and Extern Declarations
 static volatile uint64_t ticks = 0;
+
+// Functions
 void sys_tick_handler(void) {
     ++ticks;
 }

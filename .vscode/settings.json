@@ -1,7 +1,11 @@
 {
     "files.associations": {
         "rcc.h": "c",
-        "system.h": "c"
+        "system.h": "c",
+        "memorymap.h": "c",
+        "gpio.h": "c",
+        "gpio_common_f24.h": "c"
     },
-    "makefile.makefilePath": "app/makefile"
+    "makefile.makefilePath": "app/makefile",
+    "explorer.compactFolders": false,
 }

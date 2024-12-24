@@ -1,10 +1,24 @@
+/*******************************************************************************
+ * @file timer.c
+ * @author Camille Alexandra
+ *
+ * @brief
+ ******************************************************************************/
+
+// External library includes
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/rcc.h>
 
+// User includes
 #include "core/timer.h"
 
+// Defines & macros
 #define PRESCALER (84)
 #define ARR_VALUE (1000)
+
+// Global and Extern Declarations
+
+// Functions
 
 // we want to setup PWM timer on PA2, PA2 can use timer 2, channel 3
 void timer_setup(void) {

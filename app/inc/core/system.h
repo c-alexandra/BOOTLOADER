@@ -10,6 +10,9 @@
 #define LED_PIN          (GPIO1)
 #define LED_PIN_BUILTIN  (GPIO5)
 
+#define PWM_PORT         (GPIOB)
+#define PWM_PIN          (GPIO2)
+
 #define CPU_FREQ         (84000000)
 #define SYSTICK_FREQ     (1000)
 

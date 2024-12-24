@@ -1,16 +1,25 @@
-// library includes
+/*******************************************************************************
+ * @file   firmware.c
+ * @author Camille Alexandra
+ *
+ * @brief  main program driving the firmware portion of this STM32F446RE project
+ ******************************************************************************/
 
+// External library includes
 
-// project headers
-#include "common.h"
+// User includes
+#include "../../shared/inc/common.h"
 #include "core/system.h"
 #include "core/timer.h"
 
-// toggle output of GPIO from high to low, regardless of previous state
-static void toggle_led(void) {
-    gpio_toggle(LED_PORT_BUILTIN | LED_PORT, LED_PIN_BUILTIN | LED_PIN);
-}
+// Defines & Macros
+#define FLASH_MEM_BEGIN      (0x08000000)
+#define FLASH_MEM_BOOTLOADER (0x08008000)
+#define FLASH_MEM_END        (0x081FFFFF)
 
+// Global and Extern Declarations
+
+// Functions
 int main(void) {
     system_setup();
     timer_setup();
@@ -22,7 +31,7 @@ int main(void) {
 
     while (1) {
         if ((system_get_ticks() - start_time) >= 1000) {
-            toggle_led();
+            gpio_toggle(LED_PORT_BUILTIN | LED_PORT, LED_PIN_BUILTIN | LED_PIN);
             start_time = system_get_ticks();
         }
         if ((system_get_ticks() - pwm_time) >= 100) {

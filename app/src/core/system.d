@@ -26,4 +26,5 @@ src/core/system.o: src/core/system.c \
  ../libopencm3/include/libopencm3/cm3/nvic.h \
  ../libopencm3/include/libopencm3/dispatch/nvic.h \
  ../libopencm3/include/libopencm3/stm32/f4/nvic.h \
- src/core/../../inc/common.h src/core/../../inc/core/system.h
+ ../libopencm3/include/../../shared/inc/common.h \
+ src/core/../../inc/core/system.h
