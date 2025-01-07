@@ -11,7 +11,7 @@ OPENCM3_DIR    = ../libopencm3
 SHARED_SRC_DIR = ../shared/src
 SHARED_INC_DIR = ../shared/inc
 
-BINARY = firmware
+BINARY = bootloader
 
 ###############################################################################
 # Basic Device Setup
@@ -58,12 +58,6 @@ CSTD		?= -std=c99
 # Source files
 
 OBJS		+= $(SRC_DIR)/$(BINARY).o
-OBJS		+= $(SRC_DIR)/timer.o
-OBJS        += $(SRC_DIR)/bootloader.o
-
-OBJS		+= $(SHARED_SRC_DIR)/core/system.o
-OBJS		+= $(SHARED_SRC_DIR)/core/uart.o
-
 
 ###############################################################################
 # C flags
@@ -145,6 +139,7 @@ print-%:
 %.bin: %.elf
 	@#printf "  OBJCOPY $(*).bin\n"
 	$(Q)$(OBJCOPY) -Obinary $(*).elf $(*).bin
+	$(Q) python3 pad-bootloader.py
 
 %.hex: %.elf
 	@#printf "  OBJCOPY $(*).hex\n"
