@@ -6,23 +6,36 @@
  ******************************************************************************/
 
 // External library includes
+#include <libopencm3/cm3/scb.h> // contains vector table offset register
 
 // User includes
 #include "../../shared/inc/common.h"
-#include "core/system.h"
-#include "core/timer.h"
+#include "../../shared/inc/core/system.h"
+#include "../../shared/inc/core/uart.h"
+#include "timer.h"
 
 // Defines & Macros
 #define FLASH_MEM_BEGIN      (0x08000000)
 #define FLASH_MEM_BOOTLOADER (0x08008000)
 #define FLASH_MEM_END        (0x081FFFFF)
 
+#define BOOTLOADER_SIZE (0x8000U)
+
 // Global and Extern Declarations
 
 // Functions
+
+/** @brief offset vector table location in memory by booloader size
+ */
+static void vector_setup(void) {
+    SCB_VTOR = BOOTLOADER_SIZE;
+}
+
 int main(void) {
     system_setup();
     timer_setup();
+    vector_setup();
+    uart_setup();
 
     uint64_t start_time = system_get_ticks();
     uint64_t pwm_time = system_get_ticks();
@@ -32,6 +45,7 @@ int main(void) {
     while (1) {
         if ((system_get_ticks() - start_time) >= 1000) {
             gpio_toggle(LED_PORT_BUILTIN | LED_PORT, LED_PIN_BUILTIN | LED_PIN);
+            uart_write_byte(72U);
             start_time = system_get_ticks();
         }
         if ((system_get_ticks() - pwm_time) >= 100) {
@@ -42,6 +56,13 @@ int main(void) {
             cycle += 5.0;
             pwm_time = system_get_ticks();
         }
+
+        // if (uart_data_available()) {
+        //     uint8_t data = uart_read_byte();
+
+        //     // if received 'a', send back 'b', etc
+        //     uart_write_byte(data + 1);
+        // }
     }
 
     return 0;

@@ -10,7 +10,7 @@
 #include <libopencm3/stm32/rcc.h>
 
 // User includes
-#include "core/timer.h"
+#include "timer.h"
 
 // Defines & macros
 #define PRESCALER (84)

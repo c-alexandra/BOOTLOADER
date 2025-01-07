@@ -13,7 +13,7 @@
 
 // User includes
 #include "../../shared/inc/common.h"
-#include "../../inc/core/system.h"
+#include "core/system.h"
 
 // Defines & Macros
 
@@ -41,9 +41,13 @@ static void gpio_setup(void) {
     // configure gpio port a, pin 5 for output, with no pull-up or down
     gpio_mode_setup(LED_PORT_BUILTIN | LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN_BUILTIN | LED_PIN);
 
-    // configure 
+    // configure pwm on PB2
     gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2);
     gpio_set_af(GPIOB, GPIO_AF1, GPIO2);
+
+    //configure uart
+    gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
+    gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
 }
 
 static void systick_setup(void) {
