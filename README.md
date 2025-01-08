@@ -35,3 +35,25 @@ then, in another terminal,
 ```target extended localhost:4242```
 ```load```
 ```continue```
+
+Git commands to delete and rename branches
+To delete a local branch,
+```git branch -d <branchname>```
+The '-d' option is an aliad for '--delete', which only deletes branches which have been fully merged in its upstream branch
+
+```git branch -D <branchname>```
+is an alias for '--delete --force' which deletes a branch irrespective of its merge status
+
+To delete a remote branch,
+```git push -d <origin> <branchname>```
+
+or ```git push <remote_name> :<branch_name>
+
+to rename branch,
+```git branch (-m | -M) [<oldbranch>] <newbranch>```
+
+or if on current branch, 
+```git branch -m <newbranch>```
+
+to view all branches
+```git branch -a```
