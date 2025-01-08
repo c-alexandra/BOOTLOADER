@@ -7,6 +7,7 @@
 
 // External library includes
 #include <libopencm3/cm3/scb.h> // contains vector table offset register
+#include <libopencm3/stm32/usart.h>
 
 // User includes
 #include "../../shared/inc/common.h"
@@ -45,7 +46,6 @@ int main(void) {
     while (1) {
         if ((system_get_ticks() - start_time) >= 1000) {
             gpio_toggle(LED_PORT_BUILTIN | LED_PORT, LED_PIN_BUILTIN | LED_PIN);
-            uart_write_byte(72U);
             start_time = system_get_ticks();
         }
         if ((system_get_ticks() - pwm_time) >= 100) {
@@ -57,12 +57,12 @@ int main(void) {
             pwm_time = system_get_ticks();
         }
 
-        // if (uart_data_available()) {
-        //     uint8_t data = uart_read_byte();
+        if (uart_data_available()) {
+            uint8_t data = uart_read_byte();
 
-        //     // if received 'a', send back 'b', etc
-        //     uart_write_byte(data + 1);
-        // }
+            // if received 'a', send back 'b', etc
+            uart_write_byte(data + 1);
+        }
     }
 
     return 0;

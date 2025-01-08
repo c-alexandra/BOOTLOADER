@@ -15,10 +15,10 @@
 #include "core/uart.h"
 
 // Defines & macros
-#define BAUD_RATE (115200U)
+#define BAUD_RATE (115200)
 
 // Global and Extern Declarations
-static uint8_t data_buffer = 0;
+static uint8_t data_buffer = 0U;
 static bool data_available = false;
 
 // Functions
