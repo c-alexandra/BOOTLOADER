@@ -2,7 +2,7 @@
  * @file   bootloader.c
  * @author Camille Alexandra
  *
- * @brief  
+ * @brief  Redirect vector table to launch with custom bootloader
  ******************************************************************************/
 
 // External library includes
@@ -12,7 +12,7 @@
 #include "../../shared/inc/common.h"
 
 // Defines & Macros
-#define BOOTLOADER_SIZE        (0x8000U)
+#define BOOTLOADER_SIZE        (0x8000U) // 32 768
 #define MAIN_APP_START_ADDRESS (FLASH_BASE + BOOTLOADER_SIZE)
 
 // Global and Extern Declarations

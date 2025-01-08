@@ -4,7 +4,8 @@
         "system.h": "c",
         "memorymap.h": "c",
         "gpio.h": "c",
-        "gpio_common_f24.h": "c"
+        "gpio_common_f24.h": "c",
+        "scb.h": "c"
     },
     "makefile.makefilePath": "app/makefile",
     "explorer.compactFolders": false,

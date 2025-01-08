@@ -1,8 +1,8 @@
 /*******************************************************************************
- * @file 
- * @author
+ * @file   uart.c
+ * @author Camille Aitken
  *
- * @brief
+ * @brief Implement simple UART communication
  ******************************************************************************/
 
 // External library includes

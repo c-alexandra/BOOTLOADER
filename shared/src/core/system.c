@@ -2,7 +2,8 @@
  * @file   system.c
  * @author Camille Alexandra
  *
- * @brief  
+ * @brief  Contains implementation for implementing various system-level 
+ *         peripherals, such as RCC, GPIO, SYSTICK
  ******************************************************************************/
 
 // External library includes

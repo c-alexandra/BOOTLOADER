@@ -1,8 +1,8 @@
 /*******************************************************************************
- * @file timer.c
+ * @file   timer.c
  * @author Camille Alexandra
  *
- * @brief
+ * @brief  Implements timers, used in this case for PWM
  ******************************************************************************/
 
 // External library includes

@@ -7,7 +7,6 @@
 
 // External library includes
 #include <libopencm3/cm3/scb.h> // contains vector table offset register
-#include <libopencm3/stm32/usart.h>
 
 // User includes
 #include "../../shared/inc/common.h"
