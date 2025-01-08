@@ -1,0 +1,15 @@
+*.d
+*.o
+*.bin
+*.hex
+*.list
+*.srec
+*.a
+*.elf
+*.stylecheck
+*.swp
+*.map
+*.log
+*.pyc
+*.pdf
+*.tag
