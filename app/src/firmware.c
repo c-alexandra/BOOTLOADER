@@ -25,7 +25,8 @@
 
 // Functions
 
-/** @brief offset vector table location in memory by booloader size
+/** 
+ * @brief offset vector table location in memory by booloader size
  */
 static void vector_setup(void) {
     SCB_VTOR = BOOTLOADER_SIZE;
@@ -62,6 +63,8 @@ int main(void) {
             // if received 'a', send back 'b', etc
             uart_write_byte(data + 1);
         }
+
+        system_delay(1000);
     }
 
     return 0;

@@ -62,3 +62,16 @@ void system_setup(void) {
     gpio_setup();
     systick_setup();
 }
+
+/** 
+ * @brief Delays the whole system for a given number of milliseconds
+ * 
+ * @param milliseconds The number of milliseconds to delay the system
+ */
+void system_delay(uint64_t milliseconds) {
+    uint64_t start_time = system_get_ticks();
+    while ((system_get_ticks() - start_time) < milliseconds) {
+        // do nothing
+        // can't be optimized out because the ticks are volatile
+    }
+}
