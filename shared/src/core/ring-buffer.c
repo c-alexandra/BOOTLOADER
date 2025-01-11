@@ -11,7 +11,6 @@
 #include "../../shared/inc/core/ring-buffer.h"
 
 // Defines & macros
-#define RING_BUFFER_SIZE (uint32_t)(256) // must be a power of 2
 
 // Global and Extern Declarations
 
@@ -43,7 +42,7 @@ bool ring_buffer_empty(ring_buffer_t* rb) {
  * @brief Check if the ring buffer is full
  * @param rb Pointer to the ring buffer object
  * @param data Data to write to the buffer
- * @return True if the buffer is full, False otherwise
+ * @return True if the write was successful, False otherwise
  */
 bool ring_buffer_write(ring_buffer_t* rb, uint8_t data) {
     // make local copy to safeguard concurrent rb accesses
@@ -51,6 +50,7 @@ bool ring_buffer_write(ring_buffer_t* rb, uint8_t data) {
     uint32_t local_write_index = rb->tail;
 
     // Check if buffer is completely full, ie tail is right before head
+    // TODO: This is a bug, the buffer is full and something needs to be done with the data - maybe flush it?
     if (local_read_index == ((local_write_index + 1) & rb->mask)) {
         return false;
     }
@@ -59,6 +59,8 @@ bool ring_buffer_write(ring_buffer_t* rb, uint8_t data) {
     rb->buffer[local_write_index] = data;
     local_write_index = (local_write_index+ 1) & rb->mask;
     rb->tail = local_write_index;
+
+    return true;
 }
 
 /** 
@@ -81,4 +83,6 @@ bool ring_buffer_read(ring_buffer_t* rb, uint8_t* data) {
     *data = rb->buffer[local_read_index];
     local_read_index = (local_read_index + 1) & rb->mask;
     rb->head = local_read_index;
+    
+    return true;
 }

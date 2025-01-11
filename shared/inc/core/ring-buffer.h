@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../shared/inc/common.h"
+#include "common.h"
 
 typedef struct ring_buffer_t {
     uint8_t* buffer;

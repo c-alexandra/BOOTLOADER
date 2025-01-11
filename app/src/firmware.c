@@ -59,12 +59,10 @@ int main(void) {
 
         if (uart_data_available()) {
             uint8_t data = uart_read_byte();
-
-            // if received 'a', send back 'b', etc
-            uart_write_byte(data + 1);
+            uart_write_byte(data);
         }
 
-        system_delay(1000);
+        // system_delay(1000);
     }
 
     return 0;

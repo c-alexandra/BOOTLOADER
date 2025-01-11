@@ -13,7 +13,7 @@
 #include <libopencm3/cm3/nvic.h> // sys_tick_handler
 
 // User includes
-#include "../../shared/inc/common.h"
+#include "common.h"
 #include "core/system.h"
 
 // Defines & Macros
