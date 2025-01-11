@@ -11,5 +11,8 @@ typedef struct comms_packet_t {
 } comms_packet_t;
 
 void comms_setup(void);
+void comms_update(void);
+
+bool comms_data_available(void);
 void comms_send_packet(comms_packet_t* packet);
-bool comms_receive_packet(comms_packet_t* packet);
+void comms_receive_packet(comms_packet_t* packet);

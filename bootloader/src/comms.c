@@ -8,6 +8,8 @@
 // External library includes
 
 // User includes
+#include "comms.h"
+#include "core/uart.h"
 
 // Defines & macros
 
@@ -16,13 +18,38 @@
 // Functions
 
 /**
- * @brief Brief description of the function/element.
- *
- * Detailed description of the function/element.
- * Can include multiple lines and formatting.
- *
- * @param param1 Description of the first parameter.
- * @param param2 Description of the second parameter.
- * ...
- * @return Description of the return value.
+ * @brief Setup the communication peripheral
  */
+void comms_setup(void) {
+
+}
+
+/** 
+ * @brief Update the communication peripheral
+ */
+void comms_update(void) {
+}
+
+/** 
+ * @brief Check if data is available in the communication peripheral
+ * @return True if data is available, False otherwise
+ */
+bool comms_data_available(void) {
+
+}
+
+/** 
+ * @brief Send a packet of data
+ * @param packet Pointer to the packet to send
+ */
+void comms_send_packet(comms_packet_t* packet) {
+
+}
+
+/**
+ * @brief Receive a packet of data
+ * @param packet Pointer to packet buffer to write into
+ */
+void comms_receive_packet(comms_packet_t* packet) {
+
+}
