@@ -57,7 +57,7 @@ bool ring_buffer_write(ring_buffer_t* rb, uint8_t data) {
 
     // Write data and increment tail
     rb->buffer[local_write_index] = data;
-    local_write_index = (local_write_index+ 1) & rb->mask;
+    local_write_index = (local_write_index + 1) & rb->mask;
     rb->tail = local_write_index;
 
     return true;
@@ -83,6 +83,6 @@ bool ring_buffer_read(ring_buffer_t* rb, uint8_t* data) {
     *data = rb->buffer[local_read_index];
     local_read_index = (local_read_index + 1) & rb->mask;
     rb->head = local_read_index;
-    
+
     return true;
 }

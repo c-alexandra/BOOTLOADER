@@ -53,7 +53,7 @@ int main(void) {
                 cycle = 0.0;
             }
             timer_pwm_set_duty_cycle(cycle);
-            cycle += 5.0;
+            cycle += 10.0;
             pwm_time = system_get_ticks();
         }
 
@@ -62,7 +62,7 @@ int main(void) {
             uart_write_byte(data);
         }
 
-        // system_delay(1000);
+        system_delay(1000);
     }
 
     return 0;

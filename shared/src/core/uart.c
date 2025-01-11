@@ -96,8 +96,6 @@ void uart_write(uint8_t* data, const uint32_t length){
  * @param data The byte to write
  */
 void uart_write_byte(uint8_t data) {
-    ring_buffer_write(&rb, data);
-    data = uart_read_byte() + 1;
     usart_send_blocking(USART1, (uint16_t)data);
 }
 
@@ -138,5 +136,5 @@ uint8_t uart_read_byte(void) {
  * @return True if data is available, False otherwise
  */
 bool uart_data_available(void) {
-    return ring_buffer_empty(&rb);
+    return !ring_buffer_empty(&rb);
 }
