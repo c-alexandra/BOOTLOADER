@@ -2,13 +2,13 @@
  * @file   ring-buffer.c
  * @author Camille Aitken
  *
- * @brief  Implement the ring buffer data structure for use in the firmware
+ * @brief  Implements the ring buffer data structure
  ******************************************************************************/
 
 // External library includes
 
 // User includes
-#include "../../shared/inc/core/ring-buffer.h"
+#include "core/ring-buffer.h"
 
 // Defines & macros
 
@@ -24,7 +24,7 @@
  */
 void ring_buffer_setup(ring_buffer_t* rb, uint8_t* buffer, uint32_t size) {
     rb->buffer = buffer;
-    rb->mask = size - 1;
+    rb->mask = size - 1; // used for bitwise AND to wrap around buffer
     rb->head = 0;
     rb->tail = 0;
 }
