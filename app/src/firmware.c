@@ -25,7 +25,8 @@
 
 // Functions
 
-/** @brief offset vector table location in memory by booloader size
+/** 
+ * @brief offset vector table location in memory by booloader size
  */
 static void vector_setup(void) {
     SCB_VTOR = BOOTLOADER_SIZE;
@@ -52,16 +53,16 @@ int main(void) {
                 cycle = 0.0;
             }
             timer_pwm_set_duty_cycle(cycle);
-            cycle += 5.0;
+            cycle += 10.0;
             pwm_time = system_get_ticks();
         }
 
         if (uart_data_available()) {
             uint8_t data = uart_read_byte();
-
-            // if received 'a', send back 'b', etc
-            uart_write_byte(data + 1);
+            uart_write_byte(data);
         }
+
+        system_delay(1000);
     }
 
     return 0;

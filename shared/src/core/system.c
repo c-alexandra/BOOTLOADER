@@ -13,7 +13,7 @@
 #include <libopencm3/cm3/nvic.h> // sys_tick_handler
 
 // User includes
-#include "../../shared/inc/common.h"
+#include "common.h"
 #include "core/system.h"
 
 // Defines & Macros
@@ -61,4 +61,17 @@ void system_setup(void) {
     rcc_setup();
     gpio_setup();
     systick_setup();
+}
+
+/** 
+ * @brief Delays the whole system for a given number of milliseconds
+ * 
+ * @param milliseconds The number of milliseconds to delay the system
+ */
+void system_delay(uint64_t milliseconds) {
+    uint64_t start_time = system_get_ticks();
+    while ((system_get_ticks() - start_time) < milliseconds) {
+        // do nothing
+        // can't be optimized out because the ticks are volatile
+    }
 }

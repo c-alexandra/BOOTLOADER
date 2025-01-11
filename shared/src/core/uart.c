@@ -13,27 +13,39 @@
 // User includes
 #include "common.h"
 #include "core/uart.h"
+#include "core/ring-buffer.h"
 
 // Defines & macros
 #define BAUD_RATE (115200)
+#define RING_BUFFER_SIZE (uint32_t)(256) // must be a power of 2
+
 
 // Global and Extern Declarations
-static uint8_t data_buffer = 0U;
-static bool data_available = false;
+static uint8_t data_buffer[RING_BUFFER_SIZE] = {0U};
+static ring_buffer_t rb = {0U};
 
 // Functions
 
+/**
+ * @brief USART1 interrupt service routine to write to ring buffer
+ */
 void usart1_isr(void) {
     const bool overrun_occurred = usart_get_flag(USART1, USART_FLAG_ORE) == 1;
     const bool received_data = usart_get_flag(USART1, USART_FLAG_RXNE) == 1;
 
+    // when uart receives data, write a byte to the ring buffer
     if (received_data || overrun_occurred) {
-        data_buffer = (uint8_t)usart_recv(USART1);
-        data_available = true;
+        if(!ring_buffer_write(&rb, (uint8_t)usart_recv(USART1))) {
+            // buffer full, do something, handle failure
+        }
     }
 }
 
-/** @brief initialize interal configuration for enabling UART on STM32F446RE
+/** 
+ * @brief initialize interal configuration for enabling UART on STM32F446RE
+ * 
+ * @note This function sets up the UART peripheral on the STM32F446RE. It also 
+ * initializes the ring buffer for storing incoming data.
  */
 void uart_setup(void) {
     rcc_periph_clock_enable(RCC_USART1);
@@ -63,12 +75,15 @@ void uart_setup(void) {
     nvic_enable_irq(NVIC_USART1_IRQ);
 
     usart_enable(USART1);
+
+    // initialize ring buffer
+    ring_buffer_setup(&rb, data_buffer, RING_BUFFER_SIZE);
 }
 
-/** @brief
- * 
- * @param data
- * @param length
+/** 
+ * @brief Write data out to the UART buffer
+ * @param data Pointer to the data structure to write
+ * @param length The number of bytes to write
  */
 void uart_write(uint8_t* data, const uint32_t length){
     for (uint32_t i = 0; i < length; ++i) {
@@ -76,25 +91,50 @@ void uart_write(uint8_t* data, const uint32_t length){
     }
 }
 
+/**
+ * @brief Write a single byte out from USART1_TX
+ * @param data The byte to write
+ */
 void uart_write_byte(uint8_t data) {
     usart_send_blocking(USART1, (uint16_t)data);
 }
 
+/** 
+ * @brief Read data from the UART buffer
+ * @param data Pointer to the data structure to read into
+ * @param length The number of bytes to read
+ * @return The number of bytes read
+ */
 uint32_t uart_read(uint8_t* data, const uint32_t length) {
-    if (length > 0 && data_available) {
-        *data = data_buffer;
-        data_available = false;
-        return 1;
+    // attempt to read from the ring buffer
+    if (length > 0) {
+        for (uint32_t bytes_read = 0; bytes_read < length; ++bytes_read) {
+            // if we can't fully read from the buffer, return the number of bytes read
+            if(!ring_buffer_read(&rb, &data[bytes_read])) {
+                return bytes_read;
+            }
+        }
     }
 
-    return 0;
+    return length;
 }
 
+/**
+ * @brief Read a single byte from the UART buffer
+ * @return The byte read
+ */
 uint8_t uart_read_byte(void) {
-    data_available = false;
-    return data_buffer;
+    uint8_t byte = 0;
+    
+    (void)uart_read(&byte, 1);
+
+    return byte;
 }
 
+/**
+ * @brief Check if data is available in the UART ring buffer
+ * @return True if data is available, False otherwise
+ */
 bool uart_data_available(void) {
-    return data_available;
+    return !ring_buffer_empty(&rb);
 }
