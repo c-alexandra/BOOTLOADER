@@ -62,7 +62,7 @@ int main(void) {
             uart_send_byte(data);
         }
 
-        system_delay(1000);
+        // system_delay(1000);
     }
 
     return 0;
