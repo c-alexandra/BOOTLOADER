@@ -7,9 +7,14 @@
 
 // External library includes
 #include <libopencm3/stm32/memorymap.h>
+#include <libopencm3/stm32/rcc.h>
+// #include <libopencm3/cm3/vector.h>
 
 // User includes
-#include "../../shared/inc/common.h"
+#include "common.h"
+#include "core/uart.h"
+#include "core/system.h"
+#include "comms.h"
 
 // Defines & Macros
 #define BOOTLOADER_SIZE        (0x8000U) // 32 768
@@ -41,7 +46,24 @@ static void jump_to_main(void) {
 //     }
 // }
 
+// static void gpio_setup(void) {
+//     // enable rcc for GPIOA
+//     rcc_periph_clock_enable(RCC_GPIOA);
+
+//     //configure uart
+//     gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
+//     gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
+// }
+
+
 int main(void) {
+    // system_setup();
+    // uart_setup();
+    // comms_setup();
+
+    // while (true) {
+    //     system_delay(1000);
+    // }
     // test_rom_size();
 
     jump_to_main();

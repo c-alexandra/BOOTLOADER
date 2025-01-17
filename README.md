@@ -57,3 +57,11 @@ or if on current branch,
 
 to view all branches
 ```git branch -a```
+
+To Implement the communication protocol for flashing new firmware, we will use typescript and the serialport dependency
+
+To check typescript version,
+```npm list -g```
+
+At time of writing, latest serialport package is 13.0.0
+

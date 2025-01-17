@@ -1,0 +1,6 @@
+{
+    "dependencies": {
+        "@types/node": "^22.10.7",
+        "serialport": "^13.0.0"
+    }
+}
