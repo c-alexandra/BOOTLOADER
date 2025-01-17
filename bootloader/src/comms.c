@@ -8,7 +8,6 @@
 // External library includes
 
 // User includes
-#include "assert.h"
 #include "comms.h"
 #include "core/uart.h"
 #include "core/crc.h"
@@ -130,8 +129,13 @@ void comms_update(void) {
                 }
 
                 // packet was good, store it in the ring buffer
+
+                // assert that the ring buffer is not full
                 uint32_t next_write_index = (packet_ring_buffer.tail + 1) & packet_ring_buffer.mask;
-                assert(next_write_index != packet_ring_buffer.head); // debug
+                // replace the std assert() call because it broke stuff
+                if (next_write_index != packet_ring_buffer.head) {
+                    __asm__("BKPT #0");
+                }
 
                 comms_packet_memcpy(&temp_packet, &last_trasmit_packet);
                 comms_packet_memcpy(&temp_packet, &packet_ring_buffer.buffer[packet_ring_buffer.tail]);
