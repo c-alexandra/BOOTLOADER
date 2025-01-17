@@ -9,9 +9,9 @@
 #include <libopencm3/cm3/scb.h> // contains vector table offset register
 
 // User includes
-#include "../../shared/inc/common.h"
-#include "../../shared/inc/core/system.h"
-#include "../../shared/inc/core/uart.h"
+#include "common.h"
+#include "core/system.h"
+#include "core/uart.h"
 #include "timer.h"
 
 // Defines & Macros
