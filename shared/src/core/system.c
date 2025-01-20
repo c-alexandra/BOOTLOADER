@@ -35,22 +35,6 @@ static void rcc_setup(void) {
     rcc_clock_setup_pll(&rcc_hsi_configs[RCC_CLOCK_3V3_84MHZ]);
 }
 
-static void gpio_setup(void) {
-    // enable rcc for GPIOA
-    rcc_periph_clock_enable(RCC_GPIOA);
-    rcc_periph_clock_enable(RCC_GPIOB);
-    // configure gpio port a, pin 5 for output, with no pull-up or down
-    gpio_mode_setup(LED_PORT_BUILTIN | LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN_BUILTIN | LED_PIN);
-
-    // configure pwm on PB2
-    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2);
-    gpio_set_af(GPIOB, GPIO_AF1, GPIO2);
-
-    //configure uart
-    gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
-    gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
-}
-
 static void systick_setup(void) {
     systick_set_frequency(SYSTICK_FREQ, CPU_FREQ); // 1000 / sec
     systick_counter_enable();
@@ -59,6 +43,18 @@ static void systick_setup(void) {
 
 void system_setup(void) {
     rcc_setup();
-    gpio_setup();
     systick_setup();
+}
+
+/** 
+ * @brief Delays the whole system for a given number of milliseconds
+ * 
+ * @param milliseconds The number of milliseconds to delay the system
+ */
+void system_delay(uint64_t milliseconds) {
+    uint64_t start_time = system_get_ticks();
+    while ((system_get_ticks() - start_time) < milliseconds) {
+        // do nothing
+        // can't be optimized out because the ticks are volatile
+    }
 }

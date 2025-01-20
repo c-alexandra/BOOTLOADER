@@ -8,7 +8,7 @@
 // External library includes
 #include <libopencm3/stm32/memorymap.h>
 #include <libopencm3/stm32/rcc.h>
-// #include <libopencm3/cm3/vector.h>
+// #include <libopencm3/cm3/vector.h> // if using libopencm3 vector table
 
 // User includes
 #include "common.h"
@@ -35,6 +35,13 @@ static void jump_to_main(void) {
     void_fn reset_fnc = (void_fn)reset_vector;
 
     reset_fnc();
+
+    /**
+     * The following implementation uses the libopencm3 vector table
+     * and uses the libopencm3/cm3/vector.h file to call the reset function
+     */ 
+    // vector_table_t* vector_table = (vector_table_t*)MAIN_APP_START_ADDRESS;
+    // main_vector_table->reset();
 }
 
 // breaks linker if rom set to 32kb
@@ -46,25 +53,27 @@ static void jump_to_main(void) {
 //     }
 // }
 
-// static void gpio_setup(void) {
-//     // enable rcc for GPIOA
-//     rcc_periph_clock_enable(RCC_GPIOA);
+static void gpio_setup(void) {
+    // enable rcc for GPIOA
+    rcc_periph_clock_enable(RCC_GPIOA);
 
-//     //configure uart
-//     gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
-//     gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
-// }
+    //configure uart
+    gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
+    gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
+}
 
 
 int main(void) {
-    // system_setup();
-    // uart_setup();
-    // comms_setup();
+    system_setup();
+    gpio_setup();
+    uart_setup();
+    comms_setup();
 
     // while (true) {
     //     system_delay(1000);
     // }
-    // test_rom_size();
+
+    // test_rom_size(); // DEBUG: breaks linker if rom set to 32kb
 
     jump_to_main();
 
