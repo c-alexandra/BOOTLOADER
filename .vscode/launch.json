@@ -1,11 +1,112 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
+    "setupCommands": [
+        {
+            "description": "Enable pretty-printing for gdb",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+        },
+        {
+            "text": "-exec set output-radix 16"
+        }
+    ],
     "configurations": [
-        
-
-
+        {
+            "name": "JLink: Debug Application",
+            "cwd": "${workspaceFolder}/app",
+            "executable": "./firmware.elf",
+            "serverpath": "/usr/bin/JLinkGDBServer",
+            "servertype": "jlink",
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "STM32F446RE",
+            "runToEntryPoint": "main",
+            "interface": "swd",
+            "preLaunchTask": "build_debug"
+        },
+        {
+            "name": "JLink: Debug Bootloader",
+            "cwd": "${workspaceFolder}/bootloader",
+            "executable": "./bootloader.elf",
+            "serverpath": "/usr/bin/JLinkGDBServer",
+            "servertype": "jlink",
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "STM32F446RE",
+            "runToEntryPoint": "main",
+            "interface": "swd",
+            "preLaunchTask": "build_bootloader"
+        },
+        {
+            "name": "JLink: Attach to Application",
+            "cwd": "${workspaceFolder}/app",
+            "executable": "./firmware.elf",
+            "serverpath": "/usr/bin/JLinkGDBServer",
+            "servertype": "jlink",
+            "request": "attach",
+            "type": "cortex-debug",
+            "device": "STM32F446RE",
+            "runToEntryPoint": "main",
+            "interface": "swd"
+        },
+        {
+            "name": "JLink: Attach to Bootloader",
+            "cwd": "${workspaceFolder}/bootloader",
+            "executable": "./bootloader.elf",
+            "serverpath": "/usr/bin/JLinkGDBServer",
+            "servertype": "jlink",
+            "request": "attach",
+            "type": "cortex-debug",
+            "device": "STM32F446RE",
+            "runToEntryPoint": "main",
+            "interface": "swd",
+            "preLaunchTask": "build_bootloader"
+        },
+        {
+            "name": "ST-Link: Debug Application",
+            "cwd": "${workspaceFolder}/app",
+            "executable": "./firmware.elf",
+            "servertype": "stutil",
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "STM32F446RE",
+            "runToEntryPoint": "main",
+            "interface": "swd",
+            "preLaunchTask": "build_debug"
+        },
+        {
+            "name": "ST-Link: Debug Bootloader",
+            "cwd": "${workspaceFolder}/bootloader",
+            "executable": "./bootloader.elf",
+            "servertype": "stutil",
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "STM32F446RE",
+            "runToEntryPoint": "main",
+            "interface": "swd",
+            "preLaunchTask": "build_bootloader"
+        },
+        {
+            "name": "ST-Link: Attach to Application",
+            "cwd": "${workspaceFolder}/app",
+            "executable": "./firmware.elf",
+            "servertype": "stutil",
+            "request": "attach",
+            "type": "cortex-debug",
+            "device": "STM32F446RE",
+            "runToEntryPoint": "main",
+            "interface": "swd"
+        },
+        {
+            "name": "ST-Link: Attach to Bootloader",
+            "cwd": "${workspaceFolder}/bootloader",
+            "executable": "./bootloader.elf",
+            "servertype": "stutil",
+            "request": "attach",
+            "type": "cortex-debug",
+            "device": "STM32F446RE",
+            "runToEntryPoint": "main",
+            "interface": "swd"
+        }
     ]
 }

@@ -94,7 +94,7 @@ void comms_update(void) {
             } break;
 
             case CommsState_Data: {
-                if (data_index < temp_packet.length) {
+                if (data_index < PACKET_DATA_LENGTH) {
                     temp_packet.data[data_index] = uart_receive_byte();
                     data_index++;
                 } else {
@@ -123,7 +123,6 @@ void comms_update(void) {
 
                 // check if received packet was ack packet
                 if (comms_is_special_packet(&temp_packet, &ack_packet)) {
-                    comms_send_packet(&ack_packet);
                     state = CommsState_Length;
                     break;
                 }
@@ -137,7 +136,6 @@ void comms_update(void) {
                     __asm__("BKPT #0");
                 }
 
-                comms_packet_memcpy(&temp_packet, &last_trasmit_packet);
                 comms_packet_memcpy(&temp_packet, &packet_ring_buffer.buffer[packet_ring_buffer.tail]);
                 packet_ring_buffer.tail = next_write_index;
                 comms_send_packet(&ack_packet);
@@ -165,6 +163,7 @@ bool comms_data_available(void) {
  */
 void comms_send_packet(comms_packet_t* packet) {
     uart_send((uint8_t*)packet, PACKET_LENGTH);
+    comms_packet_memcpy(packet, &last_trasmit_packet);
 }
 
 /**

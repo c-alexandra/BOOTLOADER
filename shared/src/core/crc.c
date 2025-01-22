@@ -10,6 +10,8 @@
 
 #include "core/crc.h"
 
+volatile int x = 0;
+
 //------------------------------------------------------------------------------
 // Functions
 
@@ -32,6 +34,7 @@ uint8_t crc8(uint8_t* data, const uint32_t length) {
                 crc <<= 1;
             }
         }
+        ++x;
     }
 
     return crc;

@@ -9,4 +9,6 @@
     },
     "makefile.makefilePath": "app/makefile",
     "explorer.compactFolders": false,
+    "cortex-debug.gdbPath": "/Applications/ArmGNUToolchain/13.3.rel1/arm-none-eabi/bin/arm-none-eabi-gdb",
+    "cortex-debug.variableUseNaturalFormat": false,
 }

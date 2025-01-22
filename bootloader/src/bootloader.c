@@ -45,13 +45,13 @@ static void jump_to_main(void) {
 }
 
 // breaks linker if rom set to 32kb
-// const uint8_t data[0x8000] = {0};
-// static void test_rom_size(void) {
-//     volatile uint8_t x = 0;
-//     for (uint32_t i = 0; i < 0x8000; ++i) {
-//         x += data[i];
-//     }
-// }
+const uint8_t data[0x8000] = {0};
+static void test_rom_size(void) {
+    volatile uint8_t x = 0;
+    for (uint32_t i = 0; i < 0x8000; ++i) {
+        x += data[i];
+    }
+}
 
 static void gpio_setup(void) {
     // enable rcc for GPIOA
@@ -69,11 +69,24 @@ int main(void) {
     uart_setup();
     comms_setup();
 
-    // while (true) {
-    //     system_delay(1000);
-    // }
+    comms_packet_t packet = {
+        .length = 8,
+        .data = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+        .crc = 0
+    };
+    packet.crc = comms_compute_crc(&packet); // expected 0xC
+
+    while (true) {
+        comms_update();
+        packet.crc++;
+        comms_send_packet(&packet);
+        // uart_send_byte(0x42);
+        system_delay(1000);
+    }
 
     // test_rom_size(); // DEBUG: breaks linker if rom set to 32kb
+
+    // TODO: Teardown of system resources
 
     jump_to_main();
 

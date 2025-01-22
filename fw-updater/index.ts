@@ -157,7 +157,7 @@ const waitForPacket = async () => {
   return packet;
 }
 
-console.log(Packet.ack)
+console.log(Packet.ack) // DEBUG
 
 // Do everything in an async function so we can have loops, awaits etc
 const main = async () => {
@@ -166,7 +166,7 @@ const main = async () => {
   console.log(packet);
 
   const packetToSend = new Packet(4, Buffer.from([5, 6, 7, 8]));
-  packetToSend.crc++;
+  // packetToSend.crc++;
   uart.write(packetToSend.toBuffer());
 }
 
