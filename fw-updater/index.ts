@@ -166,7 +166,7 @@ const main = async () => {
   console.log(packet);
 
   const packetToSend = new Packet(4, Buffer.from([5, 6, 7, 8]));
-  // packetToSend.crc++;
+  packetToSend.crc++;
   uart.write(packetToSend.toBuffer());
 }
 

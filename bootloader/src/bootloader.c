@@ -75,13 +75,21 @@ int main(void) {
         .crc = 0
     };
     packet.crc = comms_compute_crc(&packet); // expected 0xC
+    // ++packet.crc; // DEBUG: Corrupt the packet
+
+    comms_packet_t rx_packet;
 
     while (true) {
         comms_update();
-        packet.crc++;
+
+        if (comms_data_available()) {
+            comms_receive_packet(&rx_packet);
+            volatile x = 0;
+            ++x;
+        }
         comms_send_packet(&packet);
         // uart_send_byte(0x42);
-        system_delay(1000);
+        system_delay(500);
     }
 
     // test_rom_size(); // DEBUG: breaks linker if rom set to 32kb

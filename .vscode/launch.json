@@ -1,15 +1,5 @@
 {
     "version": "0.2.0",
-    "setupCommands": [
-        {
-            "description": "Enable pretty-printing for gdb",
-            "text": "-enable-pretty-printing",
-            "ignoreFailures": true
-        },
-        {
-            "text": "-exec set output-radix 16"
-        }
-    ],
     "configurations": [
         {
             "name": "JLink: Debug Application",

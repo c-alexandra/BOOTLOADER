@@ -37,7 +37,7 @@ static uint8_t data_index = 0;
 static comms_packet_t temp_packet = { .length = 0, .data = {0}, .crc = 0 };
 static comms_packet_t retx_packet = { .length = 0, .data = {0}, .crc = 0 };
 static comms_packet_t ack_packet = { .length = 0, .data = {0}, .crc = 0 };
-static comms_packet_t last_trasmit_packet = { .length = 0, .data = {0}, .crc = 0 }; 
+static comms_packet_t last_transmit_packet = { .length = 0, .data = {0}, .crc = 0 }; 
 
 static comms_packet_t packet_buffer[PACKET_BUFFER_LENGTH] = {0U};
 static comms_ring_buffer_t packet_ring_buffer = { .buffer = packet_buffer, .mask = PACKET_BUFFER_LENGTH - 1, .head = 0, .tail = 0 };
@@ -116,7 +116,7 @@ void comms_update(void) {
 
                 // check if received packet was retx packet
                 if (comms_is_special_packet(&temp_packet, &retx_packet)) {
-                    comms_send_packet(&last_trasmit_packet);
+                    comms_send_packet(&last_transmit_packet);
                     state = CommsState_Length;
                     break;
                 }
@@ -132,7 +132,7 @@ void comms_update(void) {
                 // assert that the ring buffer is not full
                 uint32_t next_write_index = (packet_ring_buffer.tail + 1) & packet_ring_buffer.mask;
                 // replace the std assert() call because it broke stuff
-                if (next_write_index != packet_ring_buffer.head) {
+                if (next_write_index == packet_ring_buffer.head) {
                     __asm__("BKPT #0");
                 }
 
@@ -163,7 +163,7 @@ bool comms_data_available(void) {
  */
 void comms_send_packet(comms_packet_t* packet) {
     uart_send((uint8_t*)packet, PACKET_LENGTH);
-    comms_packet_memcpy(packet, &last_trasmit_packet);
+    comms_packet_memcpy(packet, &last_transmit_packet);
 }
 
 /**
