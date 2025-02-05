@@ -85,9 +85,9 @@ void uart_setup(void) {
  * @param data Pointer to the data structure to write
  * @param length The number of bytes to write
  */
-void uart_write(uint8_t* data, const uint32_t length){
+void uart_send(uint8_t* data, const uint32_t length){
     for (uint32_t i = 0; i < length; ++i) {
-        uart_write_byte(data[i]);
+        uart_send_byte(data[i]);
     }
 }
 
@@ -95,7 +95,7 @@ void uart_write(uint8_t* data, const uint32_t length){
  * @brief Write a single byte out from USART1_TX
  * @param data The byte to write
  */
-void uart_write_byte(uint8_t data) {
+void uart_send_byte(uint8_t data) {
     usart_send_blocking(USART1, (uint16_t)data);
 }
 
@@ -105,7 +105,7 @@ void uart_write_byte(uint8_t data) {
  * @param length The number of bytes to read
  * @return The number of bytes read
  */
-uint32_t uart_read(uint8_t* data, const uint32_t length) {
+uint32_t uart_receive(uint8_t* data, const uint32_t length) {
     // attempt to read from the ring buffer
     if (length > 0) {
         for (uint32_t bytes_read = 0; bytes_read < length; ++bytes_read) {
@@ -123,10 +123,10 @@ uint32_t uart_read(uint8_t* data, const uint32_t length) {
  * @brief Read a single byte from the UART buffer
  * @return The byte read
  */
-uint8_t uart_read_byte(void) {
+uint8_t uart_receive_byte(void) {
     uint8_t byte = 0;
     
-    (void)uart_read(&byte, 1);
+    (void)uart_receive(&byte, 1);
 
     return byte;
 }

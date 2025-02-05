@@ -10,24 +10,143 @@
 // User includes
 #include "comms.h"
 #include "core/uart.h"
+#include "core/crc.h"
 
 // Defines & macros
+#define PACKET_BUFFER_LENGTH (8)
 
+//------------------------------------------------------------------------------
 // Global and Extern Declarations
+typedef enum comms_state_t {
+    CommsState_Length,
+    CommsState_Data,
+    CommsState_CRC
+} comms_state_t;
 
+typedef struct comms_ring_buffer_t {
+    comms_packet_t* buffer;
+    uint32_t mask;
+    uint32_t head;
+    uint32_t tail;
+} comms_ring_buffer_t;
+
+static comms_state_t state = CommsState_Length;
+static uint8_t data_index = 0;
+
+// temp packet for storing data
+static comms_packet_t temp_packet = { .length = 0, .data = {0}, .crc = 0 };
+static comms_packet_t retx_packet = { .length = 0, .data = {0}, .crc = 0 };
+static comms_packet_t ack_packet = { .length = 0, .data = {0}, .crc = 0 };
+static comms_packet_t last_transmit_packet = { .length = 0, .data = {0}, .crc = 0 }; 
+
+static comms_packet_t packet_buffer[PACKET_BUFFER_LENGTH] = {0U};
+static comms_ring_buffer_t packet_ring_buffer = { .buffer = packet_buffer, .mask = PACKET_BUFFER_LENGTH - 1, .head = 0, .tail = 0 };
+
+//------------------------------------------------------------------------------
 // Functions
+
+static void comms_packet_memcpy(const comms_packet_t* src, comms_packet_t* dest) {
+    dest->length = src->length;
+    for (uint8_t i = 0; i < PACKET_DATA_LENGTH; ++i) {
+        dest->data[i] = src->data[i];
+    }
+    dest->crc = src->crc;
+}
+
+static bool comms_is_special_packet(comms_packet_t* packet, comms_packet_t* special_packet) {
+    for (uint8_t i = 0; i < (PACKET_LENGTH - PACKET_CRC_LENGTH); ++i) {
+        if (((uint8_t*)packet)[i] != ((uint8_t*)special_packet)[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 /**
  * @brief Setup the communication peripheral
  */
 void comms_setup(void) {
+    retx_packet.length = 1;
+    retx_packet.data[0] = PACKET_RETX_DATA0;
+    for (uint8_t i = 1; i < PACKET_DATA_LENGTH; ++i) {
+        retx_packet.data[i] = 0xFF;
+    }
+    retx_packet.crc = comms_compute_crc(&retx_packet);
 
+    ack_packet.length = 1;
+    ack_packet.data[0] = PACKET_ACK_DATA0;
+    for (uint8_t i = 1; i < PACKET_DATA_LENGTH; ++i) {
+        ack_packet.data[i] = 0xFF;
+    }
+    ack_packet.crc = comms_compute_crc(&ack_packet);
 }
 
 /** 
  * @brief Update the communication peripheral
  */
 void comms_update(void) {
+    while (uart_data_available()) {
+        switch (state) {
+            case CommsState_Length: {
+                temp_packet.length = uart_receive_byte();
+                state = CommsState_Data;
+            } break;
+
+            case CommsState_Data: {
+                if (data_index < PACKET_DATA_LENGTH) {
+                    temp_packet.data[data_index] = uart_receive_byte();
+                    data_index++;
+                } else {
+                    data_index = 0;
+                    state = CommsState_CRC;
+                }
+            } break;
+
+            case CommsState_CRC: {
+                temp_packet.crc = uart_receive_byte();
+                uint8_t calculated_crc = comms_compute_crc(&temp_packet);
+
+                // check if received packet was corrupted
+                if (temp_packet.crc != calculated_crc) {
+                    comms_send_packet(&retx_packet);
+                    state = CommsState_Length;
+                    break;
+                } 
+
+                // check if received packet was retx packet
+                if (comms_is_special_packet(&temp_packet, &retx_packet)) {
+                    comms_send_packet(&last_transmit_packet);
+                    state = CommsState_Length;
+                    break;
+                }
+
+                // check if received packet was ack packet
+                if (comms_is_special_packet(&temp_packet, &ack_packet)) {
+                    state = CommsState_Length;
+                    break;
+                }
+
+                // packet was good, store it in the ring buffer
+
+                // assert that the ring buffer is not full
+                uint32_t next_write_index = (packet_ring_buffer.tail + 1) & packet_ring_buffer.mask;
+                // replace the std assert() call because it broke stuff
+                if (next_write_index == packet_ring_buffer.head) {
+                    __asm__("BKPT #0");
+                }
+
+                comms_packet_memcpy(&temp_packet, &packet_ring_buffer.buffer[packet_ring_buffer.tail]);
+                packet_ring_buffer.tail = next_write_index;
+                comms_send_packet(&ack_packet);
+                state = CommsState_Length;
+            } break;
+
+            default: {
+                state = CommsState_Length;
+            } break;
+        }
+    }
 }
 
 /** 
@@ -35,7 +154,7 @@ void comms_update(void) {
  * @return True if data is available, False otherwise
  */
 bool comms_data_available(void) {
-
+    return (packet_ring_buffer.head != packet_ring_buffer.tail);
 }
 
 /** 
@@ -43,7 +162,8 @@ bool comms_data_available(void) {
  * @param packet Pointer to the packet to send
  */
 void comms_send_packet(comms_packet_t* packet) {
-
+    uart_send((uint8_t*)packet, PACKET_LENGTH);
+    comms_packet_memcpy(packet, &last_transmit_packet);
 }
 
 /**
@@ -51,5 +171,12 @@ void comms_send_packet(comms_packet_t* packet) {
  * @param packet Pointer to packet buffer to write into
  */
 void comms_receive_packet(comms_packet_t* packet) {
+    comms_packet_memcpy(&packet_ring_buffer.buffer[packet_ring_buffer.head], packet);
+    packet_ring_buffer.head = (packet_ring_buffer.head + 1) & packet_ring_buffer.mask;
+}
 
+uint8_t comms_compute_crc(comms_packet_t* packet) {
+    uint8_t crc = crc8((uint8_t*)packet, PACKET_LENGTH - PACKET_CRC_LENGTH);
+
+    return crc;
 }

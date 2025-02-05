@@ -7,11 +7,12 @@
 
 // External library includes
 #include <libopencm3/cm3/scb.h> // contains vector table offset register
+#include <libopencm3/stm32/rcc.h> // contains relevant rcc timer functions
 
 // User includes
-#include "../../shared/inc/common.h"
-#include "../../shared/inc/core/system.h"
-#include "../../shared/inc/core/uart.h"
+#include "common.h"
+#include "core/system.h"
+#include "core/uart.h"
 #include "timer.h"
 
 // Defines & Macros
@@ -32,8 +33,25 @@ static void vector_setup(void) {
     SCB_VTOR = BOOTLOADER_SIZE;
 }
 
+static void gpio_setup(void) {
+    // enable rcc for GPIOA
+    rcc_periph_clock_enable(RCC_GPIOA);
+    rcc_periph_clock_enable(RCC_GPIOB);
+    // configure gpio port a, pin 5 for output, with no pull-up or down
+    gpio_mode_setup(LED_PORT_BUILTIN | LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN_BUILTIN | LED_PIN);
+
+    // configure pwm on PB2
+    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2);
+    gpio_set_af(GPIOB, GPIO_AF1, GPIO2);
+
+    //configure uart
+    gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
+    gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
+}
+
 int main(void) {
     system_setup();
+    gpio_setup();
     timer_setup();
     vector_setup();
     uart_setup();
@@ -58,11 +76,11 @@ int main(void) {
         }
 
         if (uart_data_available()) {
-            uint8_t data = uart_read_byte();
-            uart_write_byte(data);
+            uint8_t data = uart_receive_byte();
+            uart_send_byte(data - 32);
         }
 
-        system_delay(1000);
+        // system_delay(1000);
     }
 
     return 0;

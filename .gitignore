@@ -13,3 +13,5 @@
 *.pyc
 *.pdf
 *.tag
+
+fw-updater/node_modules
