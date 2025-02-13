@@ -20,7 +20,7 @@
 #define FLASH_MEM_BOOTLOADER (0x08008000)
 #define FLASH_MEM_END        (0x081FFFFF)
 
-#define BOOTLOADER_SIZE (0x8000U)
+#define BOOTLOADER_SIZE (0x8000U) // 32KB
 
 // Global and Extern Declarations
 

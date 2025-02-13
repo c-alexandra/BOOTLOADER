@@ -15,6 +15,7 @@
 #include "core/uart.h"
 #include "core/system.h"
 #include "comms.h"
+#include "bl-flash.h"
 
 // Defines & Macros
 #define BOOTLOADER_SIZE        (0x8000U) // 32 768
@@ -65,31 +66,25 @@ static void gpio_setup(void) {
 
 int main(void) {
     system_setup();
-    gpio_setup();
-    uart_setup();
-    comms_setup();
+    // gpio_setup();
+    // uart_setup();
+    // comms_setup();
 
-    comms_packet_t packet = {
-        .length = 8,
-        .data = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
-        .crc = 0
-    };
-    packet.crc = comms_compute_crc(&packet); // expected 0xC
-    // ++packet.crc; // DEBUG: Corrupt the packet
+    uint8_t data[1024] = {0};
+    for (uint16_t i = 0; i < 1024; ++i) {
+        data[i] = i & 0xFF;
+    }
 
-    comms_packet_t rx_packet;
+    bl_flash_erase_main_app();
+    bl_flash_write_main_app(0x08008000, data, 1024);
+    bl_flash_write_main_app(0x0800C000, data, 1024);
+    bl_flash_write_main_app(0x08010000, data, 1024);
+    bl_flash_write_main_app(0x08020000, data, 1024);
+    bl_flash_write_main_app(0x08040000, data, 1024);
+    bl_flash_write_main_app(0x08060000, data, 1024);
 
     while (true) {
-        comms_update();
-
-        if (comms_data_available()) {
-            comms_receive_packet(&rx_packet);
-            volatile x = 0;
-            ++x;
-        }
-        comms_send_packet(&packet);
-        // uart_send_byte(0x42);
-        system_delay(500);
+        
     }
 
     // test_rom_size(); // DEBUG: breaks linker if rom set to 32kb
