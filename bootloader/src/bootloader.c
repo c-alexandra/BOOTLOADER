@@ -16,6 +16,7 @@
 #include "core/system.h"
 #include "comms.h"
 #include "bl-flash.h"
+#include "core/simple-timer.h"
 
 // Defines & Macros
 #define BOOTLOADER_SIZE        (0x8000U) // 32 768
@@ -61,35 +62,32 @@ static void gpio_setup(void) {
     //configure uart
     gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
     gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
+
+    gpio_mode_setup(UART_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN);
 }
 
 
 int main(void) {
     system_setup();
-    // gpio_setup();
+    gpio_setup();
     // uart_setup();
     // comms_setup();
 
-    uint8_t data[1024] = {0};
-    for (uint16_t i = 0; i < 1024; ++i) {
-        data[i] = i & 0xFF;
-    }
-
-    bl_flash_erase_main_app();
-    bl_flash_write_main_app(0x08008000, data, 1024);
-    bl_flash_write_main_app(0x0800C000, data, 1024);
-    bl_flash_write_main_app(0x08010000, data, 1024);
-    bl_flash_write_main_app(0x08020000, data, 1024);
-    bl_flash_write_main_app(0x08040000, data, 1024);
-    bl_flash_write_main_app(0x08060000, data, 1024);
+    simple_timer_t timer; 
+    simple_timer_t timer2;
+    simple_timer_setup(&timer, 1000, false);
+    simple_timer_setup(&timer2, 2000, true);
 
     while (true) {
-        
+        if (simple_timer_check_has_expired(&timer)) {
+            gpio_toggle(LED_PORT_BUILTIN | LED_PORT, LED_PIN);
+            volatile int x = 0;
+            ++x;
+        }
+        if (simple_timer_check_has_expired(&timer2)) {
+            simple_timer_reset(&timer);
+        }
     }
-
-    // test_rom_size(); // DEBUG: breaks linker if rom set to 32kb
-
-    // TODO: Teardown of system resources
 
     jump_to_main();
 
