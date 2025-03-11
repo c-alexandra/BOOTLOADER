@@ -45,6 +45,11 @@ static comms_ring_buffer_t packet_ring_buffer = { .buffer = packet_buffer, .mask
 //------------------------------------------------------------------------------
 // Functions
 
+/**
+ * @brief Copy the contents of one packet to another
+ * @param src Pointer to the source packet
+ * @param dest Pointer to the destination packet
+ */
 static void comms_packet_memcpy(const comms_packet_t* src, comms_packet_t* dest) {
     dest->length = src->length;
     for (uint8_t i = 0; i < PACKET_DATA_LENGTH; ++i) {
@@ -53,6 +58,12 @@ static void comms_packet_memcpy(const comms_packet_t* src, comms_packet_t* dest)
     dest->crc = src->crc;
 }
 
+/**
+ * @brief Check if a given packet matches a specially defined packet
+ * @param packet Pointer to the packet to check
+ * @param special_packet Pointer to the special packet to compare against
+ * @return True if the packet is a special packet, False otherwise
+ */
 static bool comms_is_special_packet(comms_packet_t* packet, comms_packet_t* special_packet) {
     for (uint8_t i = 0; i < (PACKET_LENGTH - PACKET_CRC_LENGTH); ++i) {
         if (((uint8_t*)packet)[i] != ((uint8_t*)special_packet)[i]) {
@@ -64,26 +75,41 @@ static bool comms_is_special_packet(comms_packet_t* packet, comms_packet_t* spec
 }
 
 /**
+ * @brief Check if a given packet is a single byte packet
+ * @param packet Pointer to the packet to check
+ * @param data0 The data byte to check against
+ * @return True if the packet is a single byte packet, False otherwise
+ */
+bool comms_is_single_byte_packet(comms_packet_t* packet, uint8_t data0) {
+    if (packet->length != 1) {
+        return false;
+    }
+
+    if (packet->data[0] != data0) {
+        return false;
+    }
+
+    for (uint8_t i = 1; i < PACKET_DATA_LENGTH; ++i) {
+        if (packet->data[i] != 0xFF) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+/**
  * @brief Setup the communication peripheral
+ * @note 
  */
 void comms_setup(void) {
-    retx_packet.length = 1;
-    retx_packet.data[0] = PACKET_RETX_DATA0;
-    for (uint8_t i = 1; i < PACKET_DATA_LENGTH; ++i) {
-        retx_packet.data[i] = 0xFF;
-    }
-    retx_packet.crc = comms_compute_crc(&retx_packet);
-
-    ack_packet.length = 1;
-    ack_packet.data[0] = PACKET_ACK_DATA0;
-    for (uint8_t i = 1; i < PACKET_DATA_LENGTH; ++i) {
-        ack_packet.data[i] = 0xFF;
-    }
-    ack_packet.crc = comms_compute_crc(&ack_packet);
+    comms_create_single_byte_packet(&retx_packet, PACKET_RETX_DATA0);
+    comms_create_single_byte_packet(&ack_packet, PACKET_ACK_DATA0);
 }
 
 /** 
- * @brief Update the communication peripheral
+ * @brief Receive UART data and parse it into packets
+ * @note  This function implements a communication state machine which parses incoming UART data into readable packets, then stores them in a ring buffer structure
  */
 void comms_update(void) {
     while (uart_data_available()) {
@@ -173,6 +199,23 @@ void comms_send_packet(comms_packet_t* packet) {
 void comms_receive_packet(comms_packet_t* packet) {
     comms_packet_memcpy(&packet_ring_buffer.buffer[packet_ring_buffer.head], packet);
     packet_ring_buffer.head = (packet_ring_buffer.head + 1) & packet_ring_buffer.mask;
+}
+
+/**
+ * @brief Create a single byte packet
+ * @param packet Pointer to the packet to create
+ * @param data0 The data byte to write into the packet
+ */
+void comms_create_single_byte_packet(comms_packet_t* packet, uint8_t data0) {
+    // Alternatively, use memset() to set all bytes to 0xFF
+    // memset(packet, 0xFF, sizeof(comms_packet_t));
+
+    packet->length = 1;
+    packet->data[0] = data0;
+    for (uint8_t i = 1; i < PACKET_DATA_LENGTH; ++i) {
+        packet->data[i] = 0xFF;
+    }
+    packet->crc = comms_compute_crc(packet);
 }
 
 uint8_t comms_compute_crc(comms_packet_t* packet) {
