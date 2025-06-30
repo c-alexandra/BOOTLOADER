@@ -58,3 +58,10 @@ void system_delay(uint64_t milliseconds) {
         // can't be optimized out because the ticks are volatile
     }
 }
+
+void system_teardown(void) {
+    systick_interrupt_disable();
+    systick_counter_disable();
+    systick_clear();
+    // rcc_periph_clock_disable(&rcc_hsi_configs[RCC_CLOCK_3V3_84MHZ]);
+}

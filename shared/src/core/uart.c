@@ -80,6 +80,13 @@ void uart_setup(void) {
     ring_buffer_setup(&rb, data_buffer, RING_BUFFER_SIZE);
 }
 
+void uart_teardown(void) {
+    nvic_disable_irq(NVIC_USART1_IRQ);
+    usart_disable_rx_interrupt(USART1);
+    usart_disable(USART1);
+    rcc_periph_clock_disable(RCC_USART1);
+}
+
 /** 
  * @brief Write data out to the UART buffer
  * @param data Pointer to the data structure to write
