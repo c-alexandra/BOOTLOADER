@@ -13,28 +13,28 @@ to configure intellisense for library headers, add hardware target to project
 configuration; that is, add to c_cpp_properties.json defines,
 ```STM32F4```
 
-to identify device, run
-```st-info --descr```
-to erase program from device
+to identify device, run  
+```st-info --descr```  
+to erase program from device  
 ```st-flash erase```
-to write bin file to memory on device
+to write bin file to memory on device  
 ```st-flash write app/firmware.bin 0x08000000```
 
 where 0x08000000 is replaced with start of flash memory block
 
-to restart/power cycle chip
+to restart/power cycle chip  
 ```st-flash --reset```
 
 
 to begin a debug session from the terminal
-start a gdb server
+start a gdb server  
 ```st-util```
 
 then, in another terminal,
-```arm-none-eabi app/firmware.elf```
-```target extended localhost:4242```
-```load```
-```continue```
+```arm-none-eabi app/firmware.elf```  
+```target extended localhost:4242```  
+```load```  
+```continue```  
 
 Git commands to delete and rename branches
 To delete a local branch,

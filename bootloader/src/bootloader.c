@@ -213,6 +213,7 @@ int main(void) {
         comms_update();
 
         switch (bl_state) {
+
             case BL_STATE_UPDATE_REQ: {
                 if (comms_data_available()) {
                     comms_receive_packet(&packet);
