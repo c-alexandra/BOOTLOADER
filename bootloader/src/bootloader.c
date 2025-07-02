@@ -183,7 +183,7 @@ int main(void) {
     // initialize module level timer to check fw update timeouts
     simple_timer_setup(&timer, DEFAULT_TIMEOUT, false);
 
-    while (true) {
+    while (bl_state != BL_STATE_DONE) {
         // handle separately from other states
         if (bl_state == BL_STATE_SYNC) {
             if (uart_data_available()) {
@@ -286,6 +286,12 @@ int main(void) {
 
             case BL_STATE_APPLICATION_ERASE: {
                 bl_flash_erase_main_app(); // can take ~10s
+
+                // send ready for data packet whenever we want to receive data
+                // blocking operation, takes time
+                comms_create_single_byte_packet(&packet, BL_PACKET_READY_FOR_DATA_DATA0);
+                comms_send_packet(&packet);
+
                 simple_timer_reset(&timer);
                 bl_state = BL_STATE_RECEIVE_FW;
             } break;
@@ -302,6 +308,9 @@ int main(void) {
                     
                     if (fw_bytes_written >= fw_length) {
                         bl_state = BL_STATE_DONE;
+                    } else {
+                        comms_create_single_byte_packet(&packet, BL_PACKET_READY_FOR_DATA_DATA0);
+                        comms_send_packet(&packet);
                     }
                 } else {
                     check_update_timeout();
