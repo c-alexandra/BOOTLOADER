@@ -232,6 +232,8 @@ int main(void) {
             } break;
 
             case BL_STATE_DEVICE_ID_REQ: {
+                // system_delay(20); // TODO: arbitrary delay to allow packet to send
+                simple_timer_reset(&timer);
                 comms_create_single_byte_packet(&packet, BL_PACKET_DEVICE_ID_REQUEST_DATA0);
                 comms_send_packet(&packet);
                 bl_state = BL_STATE_DEVICE_ID_RESP;
@@ -255,6 +257,7 @@ int main(void) {
             } break;
 
             case BL_STATE_FW_LENGTH_REQ: {
+                // system_delay(20); // TODO: arbitrary delay to allow packet to send
                 comms_create_single_byte_packet(&packet, BL_PACKET_FW_LENGTH_REQUEST_DATA0);
                 comms_send_packet(&packet);
                 simple_timer_reset(&timer);
@@ -265,13 +268,13 @@ int main(void) {
                 if (comms_data_available()) {
                     comms_receive_packet(&packet);
 
-                    fw_length = *((uint32_t*)&packet.data[1]);
-                    // fw_length = (
-                    //     (packet.data[1])      |
-                    //     (packet.data[2]) << 8 |
-                    //     (packet.data[3]) << 16|
-                    //     (packet.data[4]) << 24
-                    // );
+                    // fw_length = *((uint32_t*)&packet.data[1]);
+                    fw_length = (
+                        (packet.data[1])      |
+                        (packet.data[2]) << 8 |
+                        (packet.data[3]) << 16|
+                        (packet.data[4]) << 24
+                    );
                     
                     if (is_fw_length_packet(&packet) && fw_length <= MAX_FW_LENGTH) {
                         simple_timer_reset(&timer);
@@ -313,6 +316,7 @@ int main(void) {
                         comms_send_packet(&packet);
                     }
                 } else {
+                    // system_delay(10); // arbitrary delay to allow packet to send
                     check_update_timeout();
                 }
             } break;
