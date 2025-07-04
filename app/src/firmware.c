@@ -22,6 +22,22 @@
 
 #define BOOTLOADER_SIZE (0x8000U) // 32KB
 
+// DEBUG LED defines
+#define DEBUG_1 (0x01) // debug LED 1
+#define DEBUG_2 (0x02) // debug LED 2
+#define DEBUG_3 (0x04) // debug LED 3
+#define DEBUG_4 (0x08) // debug LED 4
+#define DEBUG_5 (0x10) // debug LED 5
+#define DEBUG_6 (0x20) // debug LED 6
+#define DEBUG_7 (0x40) // debug LED 7
+#define DEBUG_8 (0x80) // debug LED 8
+
+#define DATA_PIN  (GPIO4)
+#define CLOCK_PIN (GPIO5)
+#define LATCH_PIN (GPIO6)
+
+#define SR_PORT (GPIOA)
+
 // Global and Extern Declarations
 
 // Functions
@@ -47,6 +63,48 @@ static void gpio_setup(void) {
     //configure uart
     gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
     gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
+
+    // configure pins for DEBUG LEDs on 8-bit shift register
+    // set pins to output mode, no pull-up or down
+    gpio_mode_setup(SR_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, DATA_PIN | CLOCK_PIN | LATCH_PIN); 
+
+    // gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO4); // push-pull output, 2MHz speed
+
+    // initlialize all pins low
+    gpio_clear(SR_PORT, DATA_PIN | CLOCK_PIN | LATCH_PIN); 
+}
+
+static void shift_LED(uint8_t pattern) {
+    // latch low during shifting
+    gpio_clear(SR_PORT, LATCH_PIN);
+
+    // shift 8 bits MSB first
+    for (uint8_t i = 7; i >= 0; --i) {
+        // set data pin to the current bit
+        if (pattern & (1 << i)) {
+            gpio_set(SR_PORT, DATA_PIN);
+        } else {
+            gpio_clear(SR_PORT, DATA_PIN);
+        }
+
+        // toggle clock pin to shift in the bit
+        // TODO: use a delay here to ensure the shift register has time to shift in the bit
+        gpio_set(SR_PORT, CLOCK_PIN);
+        gpio_clear(SR_PORT, CLOCK_PIN);
+    }
+
+    // latch data to output pins
+    gpio_set(SR_PORT, LATCH_PIN);
+    gpio_clear(SR_PORT, LATCH_PIN);
+}
+
+static void blink_led(void) {
+    uint64_t start_time = system_get_ticks();
+
+    if ((system_get_ticks() - start_time) >= 1000) {
+        gpio_toggle(LED_PORT_BUILTIN | LED_PORT, LED_PIN_BUILTIN | LED_PIN);
+        start_time = system_get_ticks();
+    }
 }
 
 int main(void) {
@@ -62,10 +120,7 @@ int main(void) {
     float cycle = 0.0;
 
     while (1) {
-        if ((system_get_ticks() - start_time) >= 1000) {
-            gpio_toggle(LED_PORT_BUILTIN | LED_PORT, LED_PIN_BUILTIN | LED_PIN);
-            start_time = system_get_ticks();
-        }
+        blink_led();
         if ((system_get_ticks() - pwm_time) >= 100) {
             if (cycle == 100.0) {
                 cycle = 0.0;

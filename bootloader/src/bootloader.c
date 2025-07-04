@@ -9,6 +9,7 @@
 #include <libopencm3/stm32/memorymap.h>
 #include <libopencm3/stm32/rcc.h>
 // #include <libopencm3/cm3/vector.h> // if using libopencm3 vector table
+// #include <stdio.h>
 
 // User includes
 #include "common.h"
@@ -34,6 +35,23 @@
 #define SHORT_TIMEOUT   (1000)  // short timeout at 1s
 #define LONG_TIMEOUT    (15000) // long timeout at 15s
 
+// DEBUG LED defines
+#define DEBUG_1 (0x01) // debug LED 1
+#define DEBUG_2 (0x02) // debug LED 2
+#define DEBUG_3 (0x04) // debug LED 3
+#define DEBUG_4 (0x08) // debug LED 4
+#define DEBUG_5 (0x10) // debug LED 5
+#define DEBUG_6 (0x20) // debug LED 6
+#define DEBUG_7 (0x40) // debug LED 7
+#define DEBUG_8 (0x80) // debug LED 8
+
+#define DATA_PIN  (GPIO4)
+#define CLOCK_PIN (GPIO5)
+#define LATCH_PIN (GPIO6)
+
+#define SR_PORT (GPIOA)
+
+// bootloader state machine states
 typedef enum bl_state_t {
     BL_STATE_SYNC,
     BL_STATE_UPDATE_REQ,
@@ -90,15 +108,47 @@ static void gpio_setup(void) {
     // enable rcc for GPIOA
     rcc_periph_clock_enable(RCC_GPIOA);
 
-    //configure uart
+    //configure pins for uart
     gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
     gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
 
-    gpio_mode_setup(UART_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN);
+    // configure pins for DEBUG LEDs on 8-bit shift register
+    // set pins to output mode, no pull-up or down
+    // gpio_mode_setup(SR_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, DATA_PIN | CLOCK_PIN | LATCH_PIN); 
+
+    // gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO4); // push-pull output, 2MHz speed
+
+    // initlialize all pins low
+    // gpio_clear(SR_PORT, DATA_PIN | CLOCK_PIN | LATCH_PIN); 
+}
+
+static void led_debug(uint8_t pattern) {
+    // latch low during shifting
+    gpio_clear(SR_PORT, LATCH_PIN);
+
+    // shift 8 bits MSB first
+    for (uint8_t i = 7; i >= 0; --i) {
+        // set data pin to the current bit
+        if (pattern & (1 << i)) {
+            gpio_set(SR_PORT, DATA_PIN);
+        } else {
+            gpio_clear(SR_PORT, DATA_PIN);
+        }
+
+        // toggle clock pin to shift in the bit
+        // TODO: use a delay here to ensure the shift register has time to shift in the bit
+        gpio_set(SR_PORT, CLOCK_PIN);
+        gpio_clear(SR_PORT, CLOCK_PIN);
+    }
+
+    // latch data to output pins
+    gpio_set(SR_PORT, LATCH_PIN);
+    gpio_clear(SR_PORT, LATCH_PIN);
 }
 
 static void gpio_teardown(void) {
-    gpio_mode_setup(UART_PORT, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
+    gpio_mode_setup(UART_PORT, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, TX_PIN | RX_PIN); // set uart pins to analog mode
+    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO4); // set LED pin to input
     rcc_periph_clock_disable(RCC_GPIOA);
 }
 
@@ -183,7 +233,10 @@ int main(void) {
     // initialize module level timer to check fw update timeouts
     simple_timer_setup(&timer, DEFAULT_TIMEOUT, false);
 
-    while (bl_state != BL_STATE_DONE) {
+    // TODO: mess with debug LEDSs
+    // led_debug(DEBUG_1); // turn off all LEDs
+
+    while (1) {
         // handle separately from other states
         if (bl_state == BL_STATE_SYNC) {
             if (uart_data_available()) {
@@ -217,6 +270,8 @@ int main(void) {
             case BL_STATE_UPDATE_REQ: {
                 if (comms_data_available()) {
                     comms_receive_packet(&packet);
+
+                    // led_debug(DEBUG_2); // indicate we received a packet
                     
                     if (comms_is_single_byte_packet(&packet, BL_PACKET_FW_UPDATE_REQUEST_DATA0)) {
                         comms_create_single_byte_packet(&packet, BL_PACKET_FW_UPDATE_RESPONSE_DATA0);
@@ -308,6 +363,8 @@ int main(void) {
                     fw_bytes_written += packet.length;
 
                     simple_timer_reset(&timer);
+
+                    // printf("Received %d bytes, total written: %d/%d\n", packet.length, fw_bytes_written, fw_length);
                     
                     if (fw_bytes_written >= fw_length) {
                         bl_state = BL_STATE_DONE;
@@ -324,6 +381,8 @@ int main(void) {
             case BL_STATE_DONE: {    
                 comms_create_single_byte_packet(&packet, BL_PACKET_UPDATE_SUCCESS_DATA0);
                 comms_send_packet(&packet);
+
+                // led_debug(DEBUG_4); // indicate update success
                 
                 system_delay(200); // arbitrary delay to allow packet to send
 

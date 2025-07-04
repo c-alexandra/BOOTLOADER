@@ -153,7 +153,7 @@ uart.on('data', data => {
   rxBuffer = Buffer.concat([rxBuffer, data]);
 
   // Can we build a packet?
-  if (rxBuffer.length >= PACKET_LENGTH) {
+  while (rxBuffer.length >= PACKET_LENGTH) {
     // Logger.info(`Building a packet`);
     const raw = consumeFromBuffer(PACKET_LENGTH);
     const packet = new Packet(raw[0], raw.slice(1, 1+PACKET_DATA_BYTES), raw[PACKET_CRC_INDEX]);
@@ -163,20 +163,20 @@ uart.on('data', data => {
     if (packet.crc !== computedCrc) {
       // Logger.error(`CRC failed, computed 0x${computedCrc.toString(16)}, got 0x${packet.crc.toString(16)}`);
       writePacket(Packet.retx);
-      return;
+      continue;
     }
 
     // Are we being asked to retransmit?
     if (packet.isRetx()) {
       // Logger.info(`Retransmitting last packet`);
       writePacket(lastPacket);
-      return;
+      continue;
     }
 
     // If this is an ack, move on
     if (packet.isAck()) {
       // Logger.info(`It was an ack, nothing to do`);
-      return;
+      continue;
     }
 
     // If this is a nack, exit program
@@ -210,8 +210,8 @@ const waitForPacket = async (timeout = DEFAULT_TIMEOUT) => {
   return packets.splice(0, 1)[0]; // packets[0]
 }
 
-const waitForSingleBytePacket = async (byte: number, timeout = DEFAULT_TIMEOUT) => {
-  await waitForPacket(timeout)
+const waitForSingleBytePacket = (byte: number, timeout = DEFAULT_TIMEOUT) => (
+  waitForPacket(timeout)
     .then(packet => {
       if (packet.length != 1 || packet.data[0] != byte) {
         throw new Error(`Expected single byte packet with data 0x${byte.toString(16)}, got packet: ${packet}`);
@@ -219,9 +219,11 @@ const waitForSingleBytePacket = async (byte: number, timeout = DEFAULT_TIMEOUT) 
     })
     .catch(err => {
       Logger.error(`Error waiting for single byte packet: ${err.message}`);
+      console.log(rxBuffer);
+      console.log(packets);
       process.exit(1);
-    });
-}
+    })
+);
 
 // console.log(Packet.ack) // DEBUG
 
@@ -254,7 +256,7 @@ const syncWithBootloader = async (timeout = DEFAULT_TIMEOUT) => {
   }
 }
 
-const waitForFlashErase = async (timeout = LONG_TIMEOUT) => {
+const waitForFlashErase = (timeout = LONG_TIMEOUT) => {
   let timeWaited = 0;
   let totalTimeWaited = 0;
 
@@ -331,13 +333,15 @@ const main = async () => {
   let bytesWritten = 0;
   while (bytesWritten < fwLength) {
     await waitForSingleBytePacket(BL_PACKET_READY_FOR_DATA_DATA0);
+
     const dataBytes = fwImage.slice(bytesWritten, bytesWritten + PACKET_DATA_BYTES);
     const dataLength = dataBytes.length;
     const packet = new Packet(dataLength, dataBytes);
+
     writePacket(packet.toBuffer());
     bytesWritten += dataLength;
 
-    Logger.info(`Sending packet with ${dataLength} bytes of data, total bytes written: ${bytesWritten}...`);
+    Logger.info(`Writing ${dataLength} bytes (${bytesWritten}/${fwLength})...`);
   }
 
   await waitForSingleBytePacket(BL_PACKET_UPDATE_SUCCESS_DATA0);
