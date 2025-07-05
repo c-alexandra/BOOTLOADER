@@ -1,67 +1,27 @@
 # BOOTLOADER
 
-to add libopencm3 submodule to project, in root folder, run
-```git submodule add https://github.com/libopencm3/libopencm3.git ```
+> **Status: Stable Relase v1.0.0**
+>
+> This project has reached its initial completion milestone. All core
+> functionality is implemented, tested, and documented.
 
-to initialize submodule
-```git submodule update --init```
+I used this project as a learning opportunity for implementing a rudimentary bootloader and packet communication protocol. This version of the project is inspired by [Low Byte Production's](https://www.youtube.com/@LowByteProductions) Bare Metal Programming series.  
 
-to add st-link debug functionality to macOS, I use homebrew and
-```brew install stlink```
+In this project, I heavily utilize serial UART communication, various C data structures and algorithms, and JS scripts to implement an STM32 Nucleo bootloader.  
+The bootloader launches before the main application, initiating an update sequence which searches for a sync packet through serial input. Upon receiving matched sync and ID packets, the bootloader wipes an area of flash memory, then writes a received firmware image into a designated memory block.  
+After verifying firmware integrity, bootload sequence finishes and the updated main application is launched.
 
-to configure intellisense for library headers, add hardware target to project
-configuration; that is, add to c_cpp_properties.json defines,
-```STM32F4```
+## Project Completion
 
-to identify device, run  
-```st-info --descr```  
-to erase program from device  
-```st-flash erase```
-to write bin file to memory on device  
-```st-flash write app/firmware.bin 0x08000000```
+I consider this project **feature-complete** for version 1.0. It succesfully:
 
-where 0x08000000 is replaced with start of flash memory block
+- [x] Achieves all original design goals
+- [x] Passes MVP testing
+- [x] Includes functional documentation
+- [x] Demonstrates stable hardware/software integration
 
-to restart/power cycle chip  
-```st-flash --reset```
+## Future Development
 
+See [CHANGELOG.md](CHANGELOG.md) for version history and planned release features.
 
-to begin a debug session from the terminal
-start a gdb server  
-```st-util```
-
-then, in another terminal,
-```arm-none-eabi app/firmware.elf```  
-```target extended localhost:4242```  
-```load```  
-```continue```  
-
-Git commands to delete and rename branches
-To delete a local branch,
-```git branch -d <branchname>```
-The '-d' option is an aliad for '--delete', which only deletes branches which have been fully merged in its upstream branch
-
-```git branch -D <branchname>```
-is an alias for '--delete --force' which deletes a branch irrespective of its merge status
-
-To delete a remote branch,
-```git push -d <origin> <branchname>```
-
-or ```git push <remote_name> :<branch_name>
-
-to rename branch,
-```git branch (-m | -M) [<oldbranch>] <newbranch>```
-
-or if on current branch, 
-```git branch -m <newbranch>```
-
-to view all branches
-```git branch -a```
-
-To Implement the communication protocol for flashing new firmware, we will use typescript and the serialport dependency
-
-To check typescript version,
-```npm list -g```
-
-At time of writing, latest serialport package is 13.0.0
-
+Next Planned release: v1.1.0 with advanced firmware validation method.
