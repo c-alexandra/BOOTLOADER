@@ -17,3 +17,7 @@
 fw-updater/node_modules
 CHANGELOG_TEMPLATE.md
 UNRELEASED_README.md
+
+.gitignore
+.vscode/
+.gitmodules
