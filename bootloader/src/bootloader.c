@@ -74,6 +74,11 @@ static comms_packet_t packet;
 // Global and Extern Declarations
 
 // Functions
+
+/*******************************************************************************
+ * @brief Targets the main application start address and jumps to it using
+ *        reset vector.
+ ******************************************************************************/
 static void jump_to_main(void) {
     // create typedef for a void function
     typedef void (*void_fn)(void);
@@ -87,15 +92,16 @@ static void jump_to_main(void) {
 
     reset_fnc();
 
-    /**
-     * The following implementation uses the libopencm3 vector table
-     * and uses the libopencm3/cm3/vector.h file to call the reset function
-     */ 
+    // The following implementation uses the libopencm3 vector table
+    // and uses the libopencm3/cm3/vector.h file to call the reset function
     // vector_table_t* vector_table = (vector_table_t*)MAIN_APP_START_ADDRESS;
     // main_vector_table->reset();
 }
 
-// breaks linker if rom set to 32kb
+/*******************************************************************************
+ * @brief Debug function which breaks linker script if rom size set to 32kb
+
+ ******************************************************************************/
 const uint8_t data[0x8000] = {0};
 static void test_rom_size(void) {
     volatile uint8_t x = 0;
@@ -104,6 +110,11 @@ static void test_rom_size(void) {
     }
 }
 
+/*******************************************************************************
+ * @brief Setup the GPIO
+ * 
+ * @note Configures GPIO for UART communication
+ ******************************************************************************/
 static void gpio_setup(void) {
     // enable rcc for GPIOA
     rcc_periph_clock_enable(RCC_GPIOA);

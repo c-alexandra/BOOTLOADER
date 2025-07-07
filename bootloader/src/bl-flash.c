@@ -2,7 +2,8 @@
  * @file   bl-flash.c
  * @author Camille Aitken
  *
- * @brief
+ * @brief Contains implementation for flash memory operations in the bootloader
+ *        such as erasing and writing the main application.
  ******************************************************************************/
 
 // External library includes
@@ -18,7 +19,12 @@
 #define MAIN_APP_SECTOR_START  (2)
 #define MAIN_APP_SECTOR_END    (7)
 
-
+/*******************************************************************************
+ * @brief Erase the main application flash memory
+ * 
+ * This function unlocks the flash memory, erases the sectors allocated for the
+ * main application, and then locks the flash memory again.
+ ******************************************************************************/
 void bl_flash_erase_main_app(void) {
     // Erase the main application flash memory
     flash_unlock();
@@ -30,6 +36,16 @@ void bl_flash_erase_main_app(void) {
     flash_lock();
 }
 
+/*******************************************************************************
+ * @brief Write data to the main application flash memory
+ * 
+ * This function unlocks the flash memory, writes the specified data to the
+ * given address, and then locks the flash memory again.
+ * 
+ * @param address The starting address in flash memory where data will be written
+ * @param data Pointer to the data to be written
+ * @param length The length of the data to be written in bytes
+ ******************************************************************************/
 void bl_flash_write_main_app(const uint32_t address, const uint8_t* data, uint32_t length) {
     flash_unlock();
     
