@@ -39,7 +39,9 @@ static uint8_t data_index = 0;
 static comms_packet_t temp_packet = { .length = 0, .data = {0}, .crc = 0 };
 static comms_packet_t retx_packet = { .length = 0, .data = {0}, .crc = 0 };
 static comms_packet_t ack_packet = { .length = 0, .data = {0}, .crc = 0 };
-static comms_packet_t last_transmit_packet = { .length = 0, .data = {0}, .crc = 0 }; 
+static comms_packet_t last_transmit_packet = { 
+    .length = 0, .data = {0}, .crc = 0 
+}; 
 
 static comms_packet_t packet_buffer[PACKET_BUFFER_LENGTH] = {0U};
 static comms_ring_buffer_t packet_ring_buffer = { .buffer = packet_buffer, .mask = PACKET_BUFFER_LENGTH - 1, .head = 0, .tail = 0 };
@@ -68,7 +70,8 @@ static void comms_packet_memcpy(const comms_packet_t* src, comms_packet_t* dest)
  * @param special_packet Pointer to the special packet to compare against
  * @return True if the packet matches a special packet, False otherwise
  ******************************************************************************/
-static bool comms_is_special_packet(comms_packet_t* packet, comms_packet_t* special_packet) {
+static bool comms_is_special_packet(comms_packet_t* packet, 
+    comms_packet_t* special_packet) {
     for (uint8_t i = 0; i < (PACKET_LENGTH - PACKET_CRC_LENGTH); ++i) {
         if (((uint8_t*)packet)[i] != ((uint8_t*)special_packet)[i]) {
             return false;
@@ -114,7 +117,9 @@ void comms_setup(void) {
 /*******************************************************************************
  * @brief Receive UART data and parse it into packets
  * 
- * @note  This function implements a communication state machine which parses incoming UART data into readable packets, then stores them in a ring buffer structure
+ * @note  This function implements a communication state machine which parses 
+ *        incoming UART data into readable packets, then stores 
+ *        them in a ring buffer structure
  ******************************************************************************/
 void comms_update(void) {
     while (uart_data_available()) {
@@ -205,8 +210,10 @@ void comms_send_packet(comms_packet_t* packet) {
  * @param packet Pointer to packet buffer to write into
  ******************************************************************************/
 void comms_receive_packet(comms_packet_t* packet) {
-    comms_packet_memcpy(&packet_ring_buffer.buffer[packet_ring_buffer.head], packet);
-    packet_ring_buffer.head = (packet_ring_buffer.head + 1) & packet_ring_buffer.mask;
+    comms_packet_memcpy(&packet_ring_buffer.buffer[packet_ring_buffer.head], 
+        packet);
+    packet_ring_buffer.head = (packet_ring_buffer.head + 1) 
+    & packet_ring_buffer.mask;
 }
 
 /*******************************************************************************
