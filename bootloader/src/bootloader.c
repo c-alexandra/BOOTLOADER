@@ -14,14 +14,10 @@
 #include "common.h"
 #include "core/uart.h"
 #include "core/system.h"
+#include "core/gpio.h"
 #include "comms.h"
 #include "bl-flash.h"
 #include "core/simple-timer.h"
-
-// Defines & Macros
-#define BOOTLOADER_SIZE        (0x8000U) // 32 768
-#define MAIN_APP_START_ADDRESS (FLASH_BASE + BOOTLOADER_SIZE)
-#define MAX_FW_LENGTH          ((1024U * 512U) - BOOTLOADER_SIZE) // 512KB BL sz
 
 #define DEVICE_ID (0xA3) // arbitrary device id used to identify for fw updates
 
@@ -82,13 +78,13 @@ static void jump_to_main(void) {
 /*******************************************************************************
  * @brief Debug function which breaks linker script if rom size set to 32kb
  ******************************************************************************/
-const uint8_t data[0x8000] = {0};
-static void test_rom_size(void) {
-    volatile uint8_t x = 0;
-    for (uint32_t i = 0; i < 0x8000; ++i) {
-        x += data[i];
-    }
-}
+// const uint8_t data[0x8000] = {0};
+// static void test_rom_size(void) {
+//     volatile uint8_t x = 0;
+//     for (uint32_t i = 0; i < 0x8000; ++i) {
+//         x += data[i];
+//     }
+// }
 
 /*******************************************************************************
  * @brief Setup GPIO pins for UART communication
@@ -141,17 +137,17 @@ static void check_update_timeout(void) {
  *       byte being BL_PACKET_DEVICE_ID_RESPONSE_DATA0, and the following
  *       byte being the device id
  ******************************************************************************/
-static bool is_device_id_packet(const comms_packet_t* packet) {
-    if (packet->length != 2) {
+static bool is_device_id_packet(const comms_packet_t* verify_packet) {
+    if (verify_packet->length != 2) {
         return false;
     }
 
-    if (packet->data[0] != BL_PACKET_DEVICE_ID_RESPONSE_DATA0) {
+    if (verify_packet->data[0] != BL_PACKET_DEVICE_ID_RESPONSE_DATA0) {
         return false;
     }
 
     for (uint8_t i = 2; i < PACKET_DATA_LENGTH; ++i) {
-        if (packet->data[i] != 0xFF) {
+        if (verify_packet->data[i] != 0xFF) {
             return false;
         }
     }
@@ -169,17 +165,17 @@ static bool is_device_id_packet(const comms_packet_t* packet) {
  *       byte being BL_PACKET_FW_LENGTH_RESPONSE_DATA0, and the following 4
  *       corresponsing to a uint32_t firmware length
  ******************************************************************************/
-static bool is_fw_length_packet(const comms_packet_t* packet) {
-    if (packet->length != 5) {
+static bool is_fw_length_packet(const comms_packet_t* verify_packet) {
+    if (verify_packet->length != 5) {
         return false;
     }
 
-    if (packet->data[0] != BL_PACKET_FW_LENGTH_RESPONSE_DATA0) {
+    if (verify_packet->data[0] != BL_PACKET_FW_LENGTH_RESPONSE_DATA0) {
         return false;
     }
 
     for (uint8_t i = 5; i < PACKET_DATA_LENGTH; ++i) {
-        if (packet->data[i] != 0xFF) {
+        if (verify_packet->data[i] != 0xFF) {
             return false;
         }
     }
