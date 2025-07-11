@@ -112,7 +112,6 @@ int main(void) {
 
     uint64_t start_time = system_get_ticks();
     uint64_t pwm_time = system_get_ticks();
-    SR8_t sr_debug_leds = {0}; // initialize shift register debug LEDs
 
     // float cycle = 0.0;
 
@@ -120,7 +119,9 @@ int main(void) {
         blink_led(1000, &start_time); // blink led every second
         led_breathe(100, &pwm_time); // breathe led every second
 
-        debug_led_shift_out_spi(SR_DEBUG_1 | SR_DEBUG_2 | SR_DEBUG_3 | SR_DEBUG_4 | SR_DEBUG_5 | SR_DEBUG_6 | SR_DEBUG_7 | SR_DEBUG_8);
+        // shift_register_set_pattern(SR_DEBUG_1 | SR_DEBUG_2 | SR_DEBUG_3 | SR_DEBUG_4 | SR_DEBUG_5 | SR_DEBUG_6 | SR_DEBUG_7 | SR_DEBUG_8);
+
+        shift_register_set_led(0, true); // turn on debug LED 1
 
         uart_retransmit();
     }

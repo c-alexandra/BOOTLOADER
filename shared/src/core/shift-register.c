@@ -13,7 +13,9 @@
 
 #include "common.h"
 #include "core/shift-register.h"
+#include "core/system.h"
 
+static uint8_t led_state = 0;
 
 /**
  * @brief Initializes the SPI peripheral
@@ -42,7 +44,7 @@ static void spi_setup(void) {
      */
     spi_init_master(SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_32,
         SPI_CR1_CPOL_CLK_TO_1_WHEN_IDLE, SPI_CR1_CPHA_CLK_TRANSITION_2, 
-        SPI_CR1_DFF_8BIT, SPI_CR1_LSBFIRST); 
+        SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST); 
 
     /* Set NSS management to software, so we can control the SS pin manually
      * 
@@ -64,7 +66,7 @@ void shift_register_setup(void) {
  * 
  * @param data The byte of data to send to the shift register
  */
-void debug_led_shift_out_spi(uint8_t data) {
+static void debug_led_shift_out_spi(uint8_t data) {
     gpio_clear(GPIOB, GPIO0); // set latch pin low to prepare for data transfer
 
     while (!(SPI_SR(SPI1) & SPI_SR_TXE)); // wait until transmit buffer is empty
@@ -75,4 +77,37 @@ void debug_led_shift_out_spi(uint8_t data) {
     gpio_set(GPIOB, GPIO0); // set latch pin high to latch data into shift register
     system_delay(1); // small delay to ensure data is latched
     gpio_clear(GPIOB, GPIO0); // set latch pin low again to prepare for next data transfer
+}
+
+void shift_register_set_pattern(uint8_t pattern) {
+    // Shift out the pattern to the shift register
+    debug_led_shift_out_spi(pattern);
+    
+    // Update the led_state in the SR8_t structure
+    led_state = pattern;
+}
+
+/**
+ * @brief Set the state of a specific LED in the shift register
+ * 
+ * @param led The index of the LED to set (0-7)
+ * @param state The state to set the LED to (true for on, false for off)
+ */
+void shift_register_set_led(uint8_t led, bool state) {
+    // Set the specified LED in the shift register state
+    if (led > 7) {
+        return;
+    }
+
+    if (state) {
+        led_state |= (1 << led); // set bit to 1
+    } else {
+        led_state &= ~(1 << led); // set bit to 0
+    }
+    shift_register_set_pattern(led_state); // update shift register with new state    
+}
+
+uint8_t shift_register_get_state(void) {
+    // Return the current state of the shift register
+    return led_state;
 }

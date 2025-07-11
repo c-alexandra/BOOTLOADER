@@ -15,9 +15,9 @@
 #define SR_CLOCK_PIN (GPIO3) // SCK pin for SPI -> SRCLK pin on shift register
 #define SR_LATCH_PIN (GPIO0) // RCLK pin on shift register
 
-struct SR8 {
-    uint8_t led_state; // 8 debug LEDs controlled by shift register
-} typedef SR8_t;
 
 void shift_register_setup(void);
-void debug_led_shift_out_spi(uint8_t data);
+void shift_register_set_pattern(uint8_t pattern);
+void shift_register_set_led(uint8_t led, bool state);
+
+uint8_t shift_register_get_state(void);
