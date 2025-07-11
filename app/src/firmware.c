@@ -41,14 +41,6 @@ static void gpio_setup(void) {
     gpio_mode_setup(UART_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, TX_PIN | RX_PIN);
     gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
 
-    // configure pins for DEBUG LEDs on 8-bit shift register
-    // set pins to output mode, no pull-up or down
-    gpio_mode_setup(SR_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, SR_DATA_PIN | SR_CLOCK_PIN | SR_LATCH_PIN); 
-
-    // gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO4); // push-pull output, 2MHz speed
-
-    // initlialize all SR pins low
-    gpio_clear(SR_PORT, SR_DATA_PIN | SR_CLOCK_PIN | SR_LATCH_PIN); 
     gpio_set(LED_PORT_BUILTIN, LED_PIN_BUILTIN); // set builtin LED high
 }
 
@@ -102,16 +94,35 @@ static void uart_retransmit(void) {
     }
 }
 
+
+static void walk(ShiftRegister8_t *sr, uint16_t offset, uint64_t *start_time) {
+    if ((system_get_ticks() - *start_time) >= offset) {
+        shift_register_advance(sr); // advance the shift register state
+        *start_time = system_get_ticks();
+    }
+}
+
 int main(void) {
     system_setup();
     gpio_setup();
     timer_setup();
     vector_setup();
     uart_setup();
-    shift_register_setup();
+
+    ShiftRegister8_t sr1 = {
+        .led_state = 0x00,
+        .num_outputs = 4, // 8 outputs for the debug LEDs
+        .gpio_port = SR1_PORT,
+        .ser_pin = SR1_DATA_PIN,
+        .srclk_pin = SR1_CLOCK_PIN,
+        .rclk_pin = SR1_LATCH_PIN
+    };
+
+    shift_register_setup(&sr1);
 
     uint64_t start_time = system_get_ticks();
     uint64_t pwm_time = system_get_ticks();
+    uint64_t sr_time = system_get_ticks();
 
     // float cycle = 0.0;
 
@@ -121,8 +132,13 @@ int main(void) {
 
         // shift_register_set_pattern(SR_DEBUG_1 | SR_DEBUG_2 | SR_DEBUG_3 | SR_DEBUG_4 | SR_DEBUG_5 | SR_DEBUG_6 | SR_DEBUG_7 | SR_DEBUG_8);
 
-        shift_register_set_led(0, true); // turn on debug LED 1
+        // shift_register_set_led(&sr1, 1, true); // turn on debug LED 1
 
+        // shift_register_walk(&sr1); // walk through the shift register LEDs
+
+        // shift_register_advance(&sr1); // advance the shift register state
+
+        walk(&sr1, 1000, &sr_time); // walk through the shift register LEDs every second
         uart_retransmit();
     }
 
