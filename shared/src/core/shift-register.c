@@ -35,11 +35,11 @@ static void spi1_setup(const ShiftRegister8_t *sr) {
     rcc_periph_reset_pulse(RST_SPI1); // reset SPI1 peripheral
 
     /* set up SPI1 in Master Mode with:
-     * clock baud rate: 1/8 of peripheral clock freq
+     * clock baud rate: 1/32 of peripheral clock freq
      * clock polarity: idle high
      * clock phase: data sampled on second clock transition
      * data frame format: 8-bit
-     * data transfer format: LSB first
+     * data transfer format: MSB first
      */
     spi_init_master(SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_32,
         SPI_CR1_CPOL_CLK_TO_1_WHEN_IDLE, SPI_CR1_CPHA_CLK_TRANSITION_2, 
