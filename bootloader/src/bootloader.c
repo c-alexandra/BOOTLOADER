@@ -19,8 +19,6 @@
 #include "bl-flash.h"
 #include "core/simple-timer.h"
 
-#define DEVICE_ID (0xA3) // arbitrary device id used to identify for fw updates
-
 // Arbitrary sync sequence used to identify the start of a firmware update
 #define SYNC_SEQUENCE_0 (0xC4)
 #define SYNC_SEQUENCE_1 (0x55)

@@ -16,19 +16,6 @@
 #define TX_PIN    (GPIO9)
 #define RX_PIN    (GPIO10)
 
-// Shift register debug LED configuration
-#define SR_DEBUG_1 (0x1 << 0) // debug LED 1
-#define SR_DEBUG_2 (0x1 << 1) // debug LED 2
-#define SR_DEBUG_3 (0x1 << 2) // debug LED 3
-#define SR_DEBUG_4 (0x1 << 3) // debug LED 4
-#define SR_DEBUG_5 (0x1 << 4) // debug LED 5
-#define SR_DEBUG_6 (0x1 << 5) // debug LED 6
-#define SR_DEBUG_7 (0x1 << 6) // debug LED 7
-#define SR_DEBUG_8 (0x1 << 7) // debug LED 8
 
-#define SR_PORT   (GPIOA)
-#define SR_DATA_PIN  (GPIO4)
-#define SR_CLOCK_PIN (GPIO5)
-#define SR_LATCH_PIN (GPIO6)
 
 
