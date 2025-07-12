@@ -6,7 +6,6 @@
  *         using SPI1 peripheral & SN74HC595 shift register on STM32F446RE 
  ******************************************************************************/
 
-
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
@@ -15,9 +14,10 @@
 #include "core/shift-register.h"
 #include "core/system.h"
 
-
 /**
  * @brief Initializes the SPI peripheral
+ * 
+ * @param sr Pointer to the ShiftRegister8_t structure containing shift register configuration
  */
 static void spi1_setup(const ShiftRegister8_t *sr) {
     rcc_periph_clock_enable(RCC_SPI1); // enable rcc for SPI1
@@ -63,6 +63,7 @@ void shift_register_setup(const ShiftRegister8_t *sr) {
 /**
  * @brief Shift out a byte of data to the debug LEDs using SPI
  * 
+ * @param sr Pointer to the ShiftRegister8_t structure containing shift register configuration
  * @param data The byte of data to send to the shift register
  */
 static void debug_led_shift_out_spi(ShiftRegister8_t *sr, uint8_t data) {
@@ -89,6 +90,7 @@ void shift_register_set_pattern(ShiftRegister8_t *sr, uint8_t pattern) {
 /**
  * @brief Set the state of a specific LED in the shift register
  * 
+ * @param sr Pointer to the ShiftRegister8_t structure containing shift register configuration
  * @param led The index of the LED to set (0-7)
  * @param state The state to set the LED to (true for on, false for off)
  */
@@ -106,26 +108,19 @@ void shift_register_set_led(ShiftRegister8_t *sr, uint8_t led, bool state) {
     shift_register_set_pattern(sr, sr->led_state); // update shift register with new state    
 }
 
-void shift_register_walk(ShiftRegister8_t *sr) {
-    // Walk through the shift register LEDs, turning them on one by one
-    for (uint8_t i = 0; i < sr->num_outputs; ++i) {
-        shift_register_set_led(sr, i, true); // turn on LED at index i
-        system_delay(100); // delay to visualize the walking effect
-        shift_register_set_led(sr, i, false); // turn off LED at index i
-    }
-}
-
+/**
+ * @brief Advance the shift register state by shifting left and wrapping around
+ * 
+ * @param sr Pointer to the ShiftRegister8_t structure containing shift register configuration
+ * @note This function shifts the current LED state left by one position,
+ *  wrapping around to the first LED if reaching the last.
+ */
 void shift_register_advance(ShiftRegister8_t *sr) {
-    uint8_t end = (1 << sr->num_outputs); // last LED index
+    uint8_t end = (1 << sr->num_outputs) - 1; // last LED index
 
-    sr->led_state = (sr->led_state << 1) & ~end; // shift left and wrap around
+    sr->led_state = (sr->led_state << 1) & end; // shift left and wrap around
     if (sr->led_state == 0) {
         sr->led_state = 1; // reset to first LED if all LEDs are off
     }
     shift_register_set_pattern(sr, sr->led_state); // update shift register with new state
 }
-
-// uint8_t shift_register_get_state(void) {
-//     // Return the current state of the shift register
-//     return led_state;
-// }

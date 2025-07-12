@@ -16,7 +16,7 @@
 #define SR1_LATCH_PIN (GPIO0) // RCLK pin on shift register
 
 typedef struct {
-    uint8_t led_state; // current state of the SR LEDs
+    uint8_t  led_state; // current state of the SR LEDs
     uint16_t num_outputs; // number of utilized outputs in the SR
     uint32_t gpio_port; // GPIO port used for the SR
     uint16_t rclk_pin; // GPIO pin used for latching data into the SR
@@ -27,7 +27,6 @@ typedef struct {
 void shift_register_setup(const ShiftRegister8_t *sr);
 void shift_register_set_pattern(ShiftRegister8_t *sr, uint8_t pattern);
 void shift_register_set_led(ShiftRegister8_t *sr, uint8_t led, bool state);
-void shift_register_walk(ShiftRegister8_t *sr);
 void shift_register_advance(ShiftRegister8_t *sr);
 
 // uint8_t shift_register_get_state(void);
