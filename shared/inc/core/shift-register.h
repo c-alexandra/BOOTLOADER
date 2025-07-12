@@ -29,4 +29,4 @@ void shift_register_set_pattern(ShiftRegister8_t *sr, uint8_t pattern);
 void shift_register_set_led(ShiftRegister8_t *sr, uint8_t led, bool state);
 void shift_register_advance(ShiftRegister8_t *sr);
 
-// uint8_t shift_register_get_state(void);
+void shift_register_teardown(void);

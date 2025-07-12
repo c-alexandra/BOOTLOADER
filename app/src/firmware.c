@@ -94,7 +94,13 @@ static void uart_retransmit(void) {
     }
 }
 
-
+/**
+ * @brief Walks through the shift register LEDs, advancing the state every offset milliseconds
+ * 
+ * @param sr Pointer to the ShiftRegister8_t structure containing shift register configuration
+ * @param offset The time in milliseconds to wait before advancing the shift register state
+ * @param start_time Pointer to the start time for the walking operation
+ */
 static void walk(ShiftRegister8_t *sr, uint16_t offset, uint64_t *start_time) {
     if ((system_get_ticks() - *start_time) >= offset) {
         shift_register_advance(sr); // advance the shift register state
@@ -110,8 +116,8 @@ int main(void) {
     uart_setup();
 
     ShiftRegister8_t sr1 = {
-        .led_state = 0x00,
-        .num_outputs = 4, // 8 outputs for the debug LEDs
+        .led_state = 0x00, // start with first LED on
+        .num_outputs = 8, // 8 outputs for the debug LEDs
         .gpio_port = SR1_PORT,
         .ser_pin = SR1_DATA_PIN,
         .srclk_pin = SR1_CLOCK_PIN,
@@ -130,15 +136,9 @@ int main(void) {
         blink_led(1000, &start_time); // blink led every second
         led_breathe(100, &pwm_time); // breathe led every second
 
-        // shift_register_set_pattern(SR_DEBUG_1 | SR_DEBUG_2 | SR_DEBUG_3 | SR_DEBUG_4 | SR_DEBUG_5 | SR_DEBUG_6 | SR_DEBUG_7 | SR_DEBUG_8);
-
-        // shift_register_set_led(&sr1, 1, true); // turn on debug LED 1
-
-        // shift_register_walk(&sr1); // walk through the shift register LEDs
-
-        // shift_register_advance(&sr1); // advance the shift register state
-
-        walk(&sr1, 1000, &sr_time); // walk through the shift register LEDs every second
+        // shift_register_set_pattern(&sr1, 0x02); // update shift register with current state
+        walk(&sr1, 1000, &sr_time); // walk through the shift register LEDs
+       
         uart_retransmit();
     }
 

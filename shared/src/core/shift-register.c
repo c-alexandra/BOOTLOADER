@@ -20,6 +20,7 @@
  * @param sr Pointer to the ShiftRegister8_t structure containing shift register configuration
  */
 static void spi1_setup(const ShiftRegister8_t *sr) {
+    rcc_periph_clock_enable(RCC_GPIOB);
     rcc_periph_clock_enable(RCC_SPI1); // enable rcc for SPI1
 
     // configure GPIO for SS= NONE, SCK=PB3, MISO= NONE, MOSI=PB5
@@ -60,6 +61,16 @@ void shift_register_setup(const ShiftRegister8_t *sr) {
     spi1_setup(sr); // setup SPI peripheral for shift register communication
 }
 
+void shift_register_teardown(void) {
+    spi_disable(SPI1); // disable SPI1 peripheral
+    rcc_periph_reset_pulse(RST_SPI1); // reset SPI1 peripheral
+    rcc_periph_clock_disable(RCC_SPI1); // disable rcc for SPI1
+    gpio_mode_setup(SR1_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, 
+        SR1_DATA_PIN | SR1_CLOCK_PIN | SR1_LATCH_PIN); // set pins to input mode
+
+    // rcc_periph_clock_disable(RCC_GPIOB);
+}
+
 /**
  * @brief Shift out a byte of data to the debug LEDs using SPI
  * 
@@ -77,14 +88,20 @@ static void debug_led_shift_out_spi(ShiftRegister8_t *sr, uint8_t data) {
     gpio_set(sr->gpio_port, sr->rclk_pin); // set latch pin high to latch data into shift register
     system_delay(1); // small delay to ensure data is latched
     gpio_clear(sr->gpio_port, sr->rclk_pin); // set latch pin low again to prepare for next data transfer
+
+    sr->led_state = data; // update the led_state in the ShiftRegister8_t structure
 }
 
 void shift_register_set_pattern(ShiftRegister8_t *sr, uint8_t pattern) {
+
+    if (sr->led_state == pattern) {
+        return; // no change in pattern, do nothing
+    }
     // Shift out the pattern to the shift register
     debug_led_shift_out_spi(sr, pattern);
     
     // Update the led_state in the SR8_t structure
-    sr->led_state = pattern;
+    // sr->led_state = pattern;
 }
 
 /**
@@ -95,17 +112,19 @@ void shift_register_set_pattern(ShiftRegister8_t *sr, uint8_t pattern) {
  * @param state The state to set the LED to (true for on, false for off)
  */
 void shift_register_set_led(ShiftRegister8_t *sr, uint8_t led, bool state) {
+    uint8_t next_state = sr->led_state;
+
     // Set the specified LED in the shift register state
     if (led > sr->num_outputs) {
         return;
     }
 
     if (state) {
-        sr->led_state |= (1 << led); // set bit to 1
+        next_state = sr->led_state | (1 << led); // set bit to 1
     } else {
-        sr->led_state &= ~(1 << led); // set bit to 0
+        next_state = sr->led_state & ~(1 << led); // set bit to 0
     }
-    shift_register_set_pattern(sr, sr->led_state); // update shift register with new state    
+    shift_register_set_pattern(sr, next_state); // update shift register with new state    
 }
 
 /**
@@ -117,10 +136,10 @@ void shift_register_set_led(ShiftRegister8_t *sr, uint8_t led, bool state) {
  */
 void shift_register_advance(ShiftRegister8_t *sr) {
     uint8_t end = (1 << sr->num_outputs) - 1; // last LED index
+    uint8_t next_pattern = (sr->led_state << 1) & end; // shift left and wrap around
 
-    sr->led_state = (sr->led_state << 1) & end; // shift left and wrap around
-    if (sr->led_state == 0) {
-        sr->led_state = 1; // reset to first LED if all LEDs are off
+    if (next_pattern == 0) {
+        next_pattern = 1; // reset to first LED if all LEDs are off
     }
-    shift_register_set_pattern(sr, sr->led_state); // update shift register with new state
+    shift_register_set_pattern(sr, next_pattern); // update shift register with new state
 }

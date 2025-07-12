@@ -18,6 +18,7 @@
 #include "comms.h"
 #include "bl-flash.h"
 #include "core/simple-timer.h"
+#include "core/shift-register.h"
 
 // Arbitrary sync sequence used to identify the start of a firmware update
 #define SYNC_SEQUENCE_0 (0xC4)
@@ -48,6 +49,15 @@ static uint32_t fw_bytes_written = 0; // track bytes written to flash
 static uint8_t sync_seq[4] = {0};
 static simple_timer_t timer; // module-level timer we will use for timeouts
 static comms_packet_t packet; 
+
+ShiftRegister8_t sr1 = {
+        .led_state = 0x00,
+        .num_outputs = 8, // 8 outputs for the debug LEDs
+        .gpio_port = SR1_PORT,
+        .ser_pin = SR1_DATA_PIN,
+        .srclk_pin = SR1_CLOCK_PIN,
+        .rclk_pin = SR1_LATCH_PIN
+    };
 
 // Functions
 /*******************************************************************************
@@ -187,6 +197,7 @@ int main(void) {
     gpio_setup();
     uart_setup();
     comms_setup();
+    shift_register_setup(&sr1);
 
     // initialize module level timer to check fw update timeouts
     simple_timer_setup(&timer, DEFAULT_TIMEOUT, false);
@@ -194,9 +205,12 @@ int main(void) {
     while (1) {
         // TODO: change implementation to utilize packet protocol and state 
         // machine for all states
-
+        
         // utilizes raw serial bytes, so handle separately from other states
         if (bl_state == BL_STATE_SYNC) {
+
+            shift_register_set_pattern(&sr1, SR_DEBUG_1); // TODO
+
             if (uart_data_available()) {
                 sync_seq[0] = sync_seq[1];
                 sync_seq[1] = sync_seq[2];
@@ -232,6 +246,8 @@ int main(void) {
         switch (bl_state) {
 
             case BL_STATE_UPDATE_REQ: {
+                shift_register_set_pattern(&sr1, SR_DEBUG_2);
+
                 if (comms_data_available()) {
                     comms_receive_packet(&packet);
                     
@@ -249,6 +265,9 @@ int main(void) {
             } break;
 
             case BL_STATE_DEVICE_ID_REQ: {
+                shift_register_set_pattern(&sr1, SR_DEBUG_3);
+
+
                 simple_timer_reset(&timer);
                 comms_create_single_byte_packet(&packet, 
                     BL_PACKET_DEVICE_ID_REQUEST_DATA0);
@@ -257,6 +276,8 @@ int main(void) {
             } break;
 
             case BL_STATE_DEVICE_ID_RESP: {
+                shift_register_set_pattern(&sr1, SR_DEBUG_4);
+
                 if (comms_data_available()) {
                     comms_receive_packet(&packet);
                     
@@ -274,6 +295,7 @@ int main(void) {
             } break;
 
             case BL_STATE_FW_LENGTH_REQ: {
+                shift_register_set_pattern(&sr1, SR_DEBUG_5);
                 comms_create_single_byte_packet(&packet,
                      BL_PACKET_FW_LENGTH_REQUEST_DATA0);
                 comms_send_packet(&packet);
@@ -282,6 +304,7 @@ int main(void) {
             } break;
 
             case BL_STATE_FW_LENGTH_RESP: {
+                shift_register_set_pattern(&sr1, SR_DEBUG_6);
                 if (comms_data_available()) {
                     comms_receive_packet(&packet);
 
@@ -306,6 +329,7 @@ int main(void) {
             } break;
 
             case BL_STATE_APPLICATION_ERASE: {
+                shift_register_set_pattern(&sr1, SR_DEBUG_7);
                 bl_flash_erase_main_app(); // can take ~10s
 
                 // send ready for data packet whenever we want to receive data
@@ -319,6 +343,7 @@ int main(void) {
             } break;
 
             case BL_STATE_RECEIVE_FW: {
+                shift_register_set_pattern(&sr1, SR_DEBUG_8);
                 if (comms_data_available()) {
                     comms_receive_packet(&packet);
                     
@@ -340,7 +365,8 @@ int main(void) {
                 }
             } break;
 
-            case BL_STATE_DONE: {    
+            case BL_STATE_DONE: {   
+                shift_register_set_pattern(&sr1, 0xFF); 
                 comms_create_single_byte_packet(&packet, 
                     BL_PACKET_UPDATE_SUCCESS_DATA0);
                 comms_send_packet(&packet);
@@ -352,6 +378,7 @@ int main(void) {
                 gpio_teardown();
                 uart_teardown();
                 system_teardown();
+                shift_register_teardown();
 
                 jump_to_main();
             } break;
