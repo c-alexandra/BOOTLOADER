@@ -5,7 +5,6 @@
  * @brief  Redirect vector table to launch with custom bootloader
  ******************************************************************************/
 
-// External library includes
 #include <libopencm3/stm32/memorymap.h>
 #include <libopencm3/stm32/rcc.h>
 // #include <libopencm3/cm3/vector.h> // if using libopencm3 vector table
@@ -59,7 +58,6 @@ ShiftRegister8_t sr1 = {
         .rclk_pin = SR1_LATCH_PIN
     };
 
-// Functions
 /*******************************************************************************
  * @brief Targets the main application start address and jumps to it using
  *        reset vector.

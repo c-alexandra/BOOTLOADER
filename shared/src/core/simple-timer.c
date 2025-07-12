@@ -5,25 +5,15 @@
  * @brief
  ******************************************************************************/
 
-// External library includes
-
-// User includes
 #include "core/simple-timer.h"
 #include "core/system.h"
 
-// Defines & macros
-
-// Global and Extern Declarations
-
-//------------------------------------------------------------------------------
-// Functions
-
-/**
+/*******************************************************************************
  * @brief Initialize the values of a simple_timer_t object
  * @param timer Description of the first parameter.
  * @param wait_time Description of the second parameter.
  * @param auto_reset Description of the third parameter.
- */
+ ******************************************************************************/
 void simple_timer_setup(simple_timer_t* timer, uint64_t wait_time, bool auto_reset) {
     timer->wait_time = wait_time;
     timer->auto_reset = auto_reset;
@@ -32,6 +22,12 @@ void simple_timer_setup(simple_timer_t* timer, uint64_t wait_time, bool auto_res
     timer->target_time = system_get_ticks() + wait_time;
 }
 
+/*******************************************************************************
+ * @brief Check if the timer has expired
+ * 
+ * @param timer Pointer to the simple_timer_t object to check
+ * @return True if the timer has expired, False otherwise
+ ******************************************************************************/
 bool simple_timer_check_has_expired(simple_timer_t* timer) {
     uint64_t now = system_get_ticks();
     bool has_expired = now >= timer->target_time; // check if past target time
@@ -52,6 +48,9 @@ bool simple_timer_check_has_expired(simple_timer_t* timer) {
     return has_expired;;
 }
 
+/*******************************************************************************
+ * @brief Reset the timer to its initial state
+ ******************************************************************************/
 void simple_timer_reset(simple_timer_t* timer) {
     simple_timer_setup(timer, timer->wait_time, timer->auto_reset);
 }

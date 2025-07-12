@@ -5,23 +5,18 @@
  * @brief Implement a simple CRC algorithm for verifying data integrity in 
  *        communication packets.
  ******************************************************************************/
-//------------------------------------------------------------------------------
-// User includes
 
 #include "core/crc.h"
 
 volatile int x = 0;
 
-//------------------------------------------------------------------------------
-// Functions
-
-/**
+/*******************************************************************************
  * @brief Calculate the CRC-8 of a data buffer
  * 
  * @param data Pointer to the data buffer
  * @param length The number of bytes in the data buffer
  * @return The CRC-8 of the data buffer
- */
+ ******************************************************************************/
 uint8_t crc8(uint8_t* data, const uint32_t length) {
     uint8_t crc = 0;
 

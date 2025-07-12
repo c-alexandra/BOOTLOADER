@@ -16,16 +16,16 @@
 #include "timer.h"
 #include "core/shift-register.h"
 
-/** 
+/*******************************************************************************
  * @brief offset vector table location in memory by booloader size
- */
+ ******************************************************************************/
 static void vector_setup(void) {
     SCB_VTOR = BOOTLOADER_SIZE;
 }
 
-/**
+/*******************************************************************************
  * @brief Initializes the GPIO pins for the application
- */
+ ******************************************************************************/
 static void gpio_setup(void) {
     // enable rcc for GPIOA
     rcc_periph_clock_enable(RCC_GPIOA);
@@ -44,11 +44,11 @@ static void gpio_setup(void) {
     gpio_set(LED_PORT_BUILTIN, LED_PIN_BUILTIN); // set builtin LED high
 }
 
-/**
+/*******************************************************************************
  * @brief Blinks led on a given systick interval
  * 
  * @param offset The time in milliseconds to wait before toggling the LED
- */
+ ******************************************************************************/
 static void blink_led(uint16_t offset, uint64_t *start_time) {
     if ((system_get_ticks() - *start_time) >= offset) {
         gpio_toggle(LED_PORT, LED_PIN);
@@ -56,11 +56,11 @@ static void blink_led(uint16_t offset, uint64_t *start_time) {
     }
 }
 
-/**
+/*******************************************************************************
  * @brief Increments the duty cycle of the PWM LED in a breathing pattern
  * 
  * @param offset The time in milliseconds to acheive brightness extrema
- */
+ ******************************************************************************/
 static void led_breathe(uint16_t offset, uint64_t *pwm_time) {
     static float cycle = 0.0;
     static bool increasing = true;
@@ -83,9 +83,9 @@ static void led_breathe(uint16_t offset, uint64_t *pwm_time) {
     }
 }
 
-/**
+/*******************************************************************************
  * @brief retransmits the last received byte over UART
- */
+ ******************************************************************************/
 static void uart_retransmit(void) {
     // retransmit the last received byte over UART
     if (uart_data_available()) {
@@ -94,13 +94,14 @@ static void uart_retransmit(void) {
     }
 }
 
-/**
- * @brief Walks through the shift register LEDs, advancing the state every offset milliseconds
+/*******************************************************************************
+ * @brief Walks through the shift register LEDs, advancing the state every 
+ *        offset milliseconds
  * 
- * @param sr Pointer to the ShiftRegister8_t structure containing shift register configuration
- * @param offset The time in milliseconds to wait before advancing the shift register state
+ * @param sr Pointer to the structure containing SR configuration
+ * @param offset The time in milliseconds to wait before advancing the SR state
  * @param start_time Pointer to the start time for the walking operation
- */
+ ******************************************************************************/
 static void walk(ShiftRegister8_t *sr, uint16_t offset, uint64_t *start_time) {
     if ((system_get_ticks() - *start_time) >= offset) {
         shift_register_advance(sr); // advance the shift register state
@@ -136,7 +137,9 @@ int main(void) {
         blink_led(1000, &start_time); // blink led every second
         led_breathe(100, &pwm_time); // breathe led every second
 
-        // shift_register_set_pattern(&sr1, 0x02); // update shift register with current state
+        // update shift register with current state
+        // shift_register_set_pattern(&sr1, 0x02); 
+        
         walk(&sr1, 1000, &sr_time); // walk through the shift register LEDs
        
         uart_retransmit();

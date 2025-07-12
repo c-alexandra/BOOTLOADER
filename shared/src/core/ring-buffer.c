@@ -5,23 +5,15 @@
  * @brief  Implements the ring buffer data structure
  ******************************************************************************/
 
-// External library includes
-
-// User includes
 #include "core/ring-buffer.h"
 
-// Defines & macros
-
-// Global and Extern Declarations
-
-// Functions
-
-/**
+/*******************************************************************************
  * @brief Setup the ring buffer object
+ * 
  * @param rb Pointer to the ring buffer object
  * @param data Pointer to the data buffer
  * @param size Size of the data buffer, as a power of 2
- */
+ ******************************************************************************/
 void ring_buffer_setup(ring_buffer_t* rb, uint8_t* buffer, uint32_t size) {
     rb->buffer = buffer;
     rb->mask = size - 1; // used for bitwise AND to wrap around buffer
@@ -29,21 +21,23 @@ void ring_buffer_setup(ring_buffer_t* rb, uint8_t* buffer, uint32_t size) {
     rb->tail = 0;
 }
 
-/**
+/*******************************************************************************
  * @brief Check if the ring buffer is empty
+ * 
  * @param rb Pointer to the ring buffer object
  * @return True if the buffer is empty, False otherwise
- */
+ ******************************************************************************/
 bool ring_buffer_empty(ring_buffer_t* rb) {
     return (rb->head == rb->tail);
 }
 
-/**
+/*******************************************************************************
  * @brief Check if the ring buffer is full
+ * 
  * @param rb Pointer to the ring buffer object
  * @param data Data to write to the buffer
  * @return True if the write was successful, False otherwise
- */
+ ******************************************************************************/
 bool ring_buffer_write(ring_buffer_t* rb, uint8_t data) {
     // make local copy to safeguard concurrent rb accesses
     uint32_t local_read_index = rb->head;
@@ -63,12 +57,13 @@ bool ring_buffer_write(ring_buffer_t* rb, uint8_t data) {
     return true;
 }
 
-/** 
+/******************************************************************************* 
  * @brief Read a byte from the ring buffer
+ * 
  * @param rb Pointer to the ring buffer object
  * @param data Pointer to the data to read into
  * @return True if the read was successful, False otherwise
- */
+ ******************************************************************************/
 bool ring_buffer_read(ring_buffer_t* rb, uint8_t* data) {
     // make local copy to safeguard concurrent rb accesses
     uint32_t local_read_index = rb->head;

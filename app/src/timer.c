@@ -5,14 +5,11 @@
  * @brief  Implements timers, used in this case for PWM
  ******************************************************************************/
 
-// External library includes
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/rcc.h>
 
-// User includes
 #include "timer.h"
 
-// Defines & macros
 #define PRESCALER (84)
 #define ARR_VALUE (1000)
 

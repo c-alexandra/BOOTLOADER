@@ -46,7 +46,8 @@ void bl_flash_erase_main_app(void) {
  * @param data Pointer to the data to be written
  * @param length The length of the data to be written in bytes
  ******************************************************************************/
-void bl_flash_write_main_app(const uint32_t address, const uint8_t* data, uint32_t length) {
+void bl_flash_write_main_app(const uint32_t address, 
+    const uint8_t* data, uint32_t length) {
     flash_unlock();
     
     flash_program(address, data, length);

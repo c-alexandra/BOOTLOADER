@@ -5,20 +5,12 @@
  * @brief
  ******************************************************************************/
 
-// External library includes
-
-// User includes
 #include "comms.h"
 #include "core/uart.h"
 #include "core/crc.h"
 
-// Defines & macros
 #define PACKET_BUFFER_LENGTH (8)
 
-//------------------------------------------------------------------------------
-// Global and Extern Declarations
-
-// 
 typedef enum comms_state_t {
     CommsState_Length,
     CommsState_Data,
@@ -44,10 +36,12 @@ static comms_packet_t last_transmit_packet = {
 }; 
 
 static comms_packet_t packet_buffer[PACKET_BUFFER_LENGTH] = {0U};
-static comms_ring_buffer_t packet_ring_buffer = { .buffer = packet_buffer, .mask = PACKET_BUFFER_LENGTH - 1, .head = 0, .tail = 0 };
-
-//------------------------------------------------------------------------------
-// Functions
+static comms_ring_buffer_t packet_ring_buffer = { 
+    .buffer = packet_buffer,
+    .mask = PACKET_BUFFER_LENGTH - 1,
+    .head = 0,
+    .tail = 0 
+};
 
 /*******************************************************************************
  * @brief Copy the contents of one packet to another
@@ -166,13 +160,15 @@ void comms_update(void) {
                 // packet was good, store it in the ring buffer
 
                 // assert that the ring buffer is not full
-                uint32_t next_write_index = (packet_ring_buffer.tail + 1) & packet_ring_buffer.mask;
+                uint32_t next_write_index = (packet_ring_buffer.tail + 1) 
+                    & packet_ring_buffer.mask;
                 // replace the std assert() call because it broke stuff
                 if (next_write_index == packet_ring_buffer.head) {
                     __asm__("BKPT #0");
                 }
 
-                comms_packet_memcpy(&temp_packet, &packet_ring_buffer.buffer[packet_ring_buffer.tail]);
+                comms_packet_memcpy(&temp_packet, 
+                    &packet_ring_buffer.buffer[packet_ring_buffer.tail]);
                 packet_ring_buffer.tail = next_write_index;
                 comms_send_packet(&ack_packet);
                 state = CommsState_Length;
