@@ -119,7 +119,7 @@ To configure intellisense for library headers, add hardware target to project co
 ### ST-Link terminal commands
 
 To restart/power cycle the chip,  
-`st-flash --reset`
+`st-flash reset`
 
 To identify device,  
 `st-info --descr`
