@@ -5,7 +5,7 @@
  * @brief  From-scratch implementation of AES-128 encryption and decryption
  ******************************************************************************/
 
-#include "aes.h"
+#include "core/aes.h"
 
 // For memcpy
 #include "string.h"

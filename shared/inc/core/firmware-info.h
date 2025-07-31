@@ -24,16 +24,11 @@
 // placed directly after the interrupt vector table in flash
 // check datasheet for exact address and table size
 typedef struct firmware_info_t {
-    uint32_t sentinel;  // Sentinel value to identify firmware info structure
-    uint32_t device_id; // Unique device identifier
-    uint32_t version;   // Firmware version number
-    uint32_t length;    // length of the firmware image
-    uint32_t reserved0;
-    uint32_t reserved1;
-    uint32_t reserved2;
-    uint32_t reserved3;
-    uint32_t reserved4;
-    uint32_t crc32;     // unique crc32 checksum of the firmware image
+    uint32_t sentinel;    // Sentinel value to identify firmware info structure
+    uint32_t device_id;   // Unique device identifier
+    uint32_t version;     // Firmware version number
+    uint32_t length;      // length of the firmware image
+    uint32_t reserved[4]; 
 } firmware_info_t;
 
 bool validate_firmware_image(void);
