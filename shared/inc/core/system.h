@@ -5,15 +5,6 @@
 
 #include "common.h"
 
-#define DEVICE_ID (0xA3) // arbitrary device id to identify for fw updates
-
-#define BOOTLOADER_SIZE        (0x8000U) // 32KB - 32 768 bytes
-#define FLASH_MEM_BEGIN        (0x08000000)
-#define FLASH_MEM_BOOTLOADER   (0x08008000)
-#define FLASH_MEM_END          (0x081FFFFF)
-#define MAIN_APP_START_ADDRESS (FLASH_BASE + BOOTLOADER_SIZE)
-#define MAX_FW_LENGTH          ((1024U * 512U) - BOOTLOADER_SIZE) // 512KB
-
 #define CPU_FREQ         (84000000) // 84MHz
 #define SYSTICK_FREQ     (1000)
 

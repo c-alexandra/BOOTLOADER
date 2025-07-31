@@ -66,6 +66,7 @@ OBJS		+= $(SHARED_SRC_DIR)/core/simple-timer.o
 OBJS		+= $(SHARED_SRC_DIR)/core/ring-buffer.o
 OBJS		+= $(SHARED_SRC_DIR)/core/system.o
 OBJS		+= $(SHARED_SRC_DIR)/core/shift-register.o
+OBJS		+= $(SHARED_SRC_DIR)/core/firmware-info.o
 
 ###############################################################################
 # C flags

@@ -15,6 +15,7 @@
 #include "core/gpio.h"
 #include "timer.h"
 #include "core/shift-register.h"
+#include "core/firmware-info.h"
 
 /*******************************************************************************
  * @brief offset vector table location in memory by booloader size
@@ -31,7 +32,8 @@ static void gpio_setup(void) {
     rcc_periph_clock_enable(RCC_GPIOA);
     rcc_periph_clock_enable(RCC_GPIOB);
     // configure gpio port a, pin 5 for output, with no pull-up or down
-    gpio_mode_setup(LED_PORT_BUILTIN | LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN_BUILTIN | LED_PIN);
+    gpio_mode_setup(LED_PORT_BUILTIN | LED_PORT, GPIO_MODE_OUTPUT, 
+        GPIO_PUPD_NONE, LED_PIN_BUILTIN | LED_PIN);
 
     // configure pwm on PB2
     gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2);

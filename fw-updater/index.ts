@@ -14,6 +14,12 @@ const PACKET_LENGTH         = PACKET_LENGTH_BYTES + PACKET_DATA_BYTES + PACKET_C
 const PACKET_ACK_DATA0      = 0x15;
 const PACKET_RETX_DATA0     = 0x19;
 
+const FLASH_BASE             = (0x08000000); // Flash memory base address
+const BOOTLOADER_SIZE        = (0x00008000); // 32kB bootloader size
+const MAIN_APP_START_ADDRESS = (0x08008000); // 32kB bootloader, so main app starts at 0x08008000
+const VECTOR_TABLE_SIZE      = (0x000001B0); // 2080 bytes, which is the size of the vector table
+const FIRMWARE_INFO_SIZE     = (10 * 4);     // 10 uint32_t values, so 40 bytes
+
 const BL_PACKET_SYNC_OBSERVED_DATA0      = (0x20);
 const BL_PACKET_FW_UPDATE_REQUEST_DATA0  = (0x31);
 const BL_PACKET_FW_UPDATE_RESPONSE_DATA0 = (0x37);
@@ -24,6 +30,21 @@ const BL_PACKET_FW_LENGTH_RESPONSE_DATA0 = (0x45);
 const BL_PACKET_READY_FOR_DATA_DATA0     = (0x48);
 const BL_PACKET_UPDATE_SUCCESS_DATA0     = (0x54);
 const BL_PACKET_NACK_DATA0               = (0x99);
+
+const FWINFO_ADDRESS        = (FLASH_BASE + BOOTLOADER_SIZE + VECTOR_TABLE_SIZE)
+const FWINFO_VALIDATE_FROM  = (VECTOR_TABLE_SIZE + FIRMWARE_INFO_SIZE)
+
+const FWINFO_SENTINEL_OFFSET  = (VECTOR_TABLE_SIZE + (0 * 4));
+const FWINFO_DEVICE_ID_OFFSET = (VECTOR_TABLE_SIZE + (1 * 4));
+const FWINFO_VERSION_OFFSET   = (VECTOR_TABLE_SIZE + (2 * 4));
+const FWINFO_LENGTH_OFFSET    = (VECTOR_TABLE_SIZE + (3 * 4));
+const FWINFO_RESERVED0_OFFSET = (VECTOR_TABLE_SIZE + (4 * 4));
+const FWINFO_RESERVED1_OFFSET = (VECTOR_TABLE_SIZE + (5 * 4));
+const FWINFO_RESERVED2_OFFSET = (VECTOR_TABLE_SIZE + (6 * 4));
+const FWINFO_RESERVED3_OFFSET = (VECTOR_TABLE_SIZE + (7 * 4));
+const FWINFO_RESERVED4_OFFSET = (VECTOR_TABLE_SIZE + (8 * 4));
+const FWINFO_CRC32_OFFSET     = (VECTOR_TABLE_SIZE + (9 * 4));
+const FWINFO_SENTINEL         = (0xDEADC0DE) // Example sentinel value to identify firmware info structure
 
 
 // Validation constants
@@ -60,6 +81,25 @@ const crc8 = (data: Buffer | Array<number>) => {
 
   return crc;
 };
+
+// CRC32 implementation
+const crc32 = (data: Buffer, length: number) => {
+  let byte;
+  let crc = 0xffffffff;
+  let mask;
+
+  for (let i = 0; i < length; i++) {
+    byte = data[i];
+    crc = (crc ^ byte) >>> 0;
+
+    for (let j = 0; j < 8; j++) {
+      mask = (-(crc & 1)) >>> 0;
+      crc = ((crc >>> 1) ^ (0xedb88320 & mask)) >>> 0;
+    }
+  }
+
+  return (~crc) >>> 0;
+}
 
 // Async delay function, which gives the event loop time to process outside input
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -289,6 +329,16 @@ const main = async () => {
   const fwLength = fwImage.length;
   Logger.success(`Firmware length is ${fwLength} bytes`);
 
+  Logger.info('Injecting firmware info structure into firmware image...');
+  fwImage.writeUInt32LE(fwLength, FWINFO_LENGTH_OFFSET); // write firmware length
+  fwImage.writeUInt32LE(0x00000001, FWINFO_VERSION_OFFSET); // write firmware version
+
+  // FWINFO_VALIDATE_FROM -> (fwLength - (VECTOR_TABLE_SIZE + FIRMWARE_INFO_SIZE))
+  const crcValue = crc32(fwImage.slice(FWINFO_VALIDATE_FROM), 
+                          fwLength - (VECTOR_TABLE_SIZE + FIRMWARE_INFO_SIZE));
+  Logger.info(`Calculated CRC32 value: 0x${crcValue.toString(16).padStart(8, '0')}`);
+  fwImage.writeUInt32LE(crcValue, FWINFO_CRC32_OFFSET); // write CRC32 value
+
   // Start the bootloader update process
 
   // Begin by attempting serial sync with bootloader
@@ -307,10 +357,11 @@ const main = async () => {
   Logger.info('Awaiting device ID request...');
   await waitForSingleBytePacket(BL_PACKET_DEVICE_ID_REQUEST_DATA0);
   Logger.success('Device ID request received, sending device ID...');
-  const deviceIdPacket = new Packet(2, Buffer.from([BL_PACKET_DEVICE_ID_RESPONSE_DATA0, DEVICE_ID]));
+  const deviceID = fwImage[FWINFO_DEVICE_ID_OFFSET];
+  const deviceIdPacket = new Packet(2, Buffer.from([BL_PACKET_DEVICE_ID_RESPONSE_DATA0, deviceID]));
   writePacket(deviceIdPacket.toBuffer());
   // Logger.success('Device ID requested and validated...');
-  Logger.info(`Device ID ${DEVICE_ID.toString(16)} sent...`); // formats in hex
+  Logger.info(`Device ID ${deviceID.toString(16)} sent...`); // formats in hex
 
   // Receive firmware length request, then send calculated firmware length
   Logger.info('Awaiting firmware length request...');
@@ -349,4 +400,5 @@ const main = async () => {
 }
 
 main()
+  // .catch(e => {throw e})
   .finally(() => uart.close());

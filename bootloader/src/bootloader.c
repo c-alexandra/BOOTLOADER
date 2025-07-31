@@ -8,6 +8,7 @@
 #include <libopencm3/stm32/memorymap.h>
 #include <libopencm3/stm32/rcc.h>
 // #include <libopencm3/cm3/vector.h> // if using libopencm3 vector table
+#include <libopencm3/cm3/scb.h> // system control block
 
 // User includes
 #include "common.h"
@@ -18,6 +19,7 @@
 #include "bl-flash.h"
 #include "core/simple-timer.h"
 #include "core/shift-register.h"
+#include "core/firmware-info.h"
 
 // Arbitrary sync sequence used to identify the start of a firmware update
 #define SYNC_SEQUENCE_0 (0xC4)
@@ -378,7 +380,11 @@ int main(void) {
                 system_teardown();
                 shift_register_teardown();
 
-                jump_to_main();
+                if (validate_firmware_image()) {
+                    jump_to_main();
+                } else {
+                    scb_reset_system(); // reset system if firmware is invalid
+                }
             } break;
 
             default: {
