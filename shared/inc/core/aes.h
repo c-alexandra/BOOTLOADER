@@ -3,6 +3,7 @@
 #include "common.h"
 
 #define NUM_ROUND_KEYS_128 (11)
+#define AES_BLOCK_SIZE     (16) // 128 bits
 
 typedef uint8_t AES_Column_t[4];
 typedef AES_Column_t AES_Block_t[4];

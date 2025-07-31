@@ -4,6 +4,7 @@
 #include <libopencm3/cm3/vector.h>
 #include "common.h"
 
+#define ALIGNED(address, alignment) (((address) - 1U + (alignment)) & ~((alignment) - 1U))
 
 #define DEVICE_ID (0xA3) // arbitrary device id to identify for fw updates
 
@@ -15,10 +16,10 @@
 #define MAX_FW_LENGTH          ((1024U * 512U) - BOOTLOADER_SIZE) // 512KB
 
 // placed after vector table + account for byte alignment 
-#define FWINFO_ADDRESS (MAIN_APP_START_ADDRESS + sizeof(vector_table_t) + sizeof(uint32_t) * 1)
+#define FWINFO_ADDRESS (ALIGNED(MAIN_APP_START_ADDRESS + sizeof(vector_table_t), 16))
 
-#define FWINFO_VALIDATE_FROM   (FWINFO_ADDRESS + sizeof(firmware_info_t))
-#define FWINFO_VALIDATE_LENGTH(fw_length) (fw_length - (sizeof(vector_table_t) + sizeof(firmware_info_t) + sizeof(uint32_t) * 1))
+#define FWINFO_VALIDATE_FROM   (ALIGNED(FWINFO_ADDRESS + sizeof(firmware_info_t), 16))
+#define FWINFO_VALIDATE_LENGTH(fw_length) (fw_length - (BOOTLOADER_SIZE - FWINFO_VALIDATE_FROM))
 #define FWINFO_SENTINEL (0xDEADC0DE) // Example sentinel value to identify firmware info structure
 
 // placed directly after the interrupt vector table in flash

@@ -19,8 +19,6 @@ bool validate_firmware_image(void) {
     if (info->device_id != DEVICE_ID) {
         return false;
     }
-    // Check CRC32
-    uint32_t fw_length = info->length;
 
     return true;
 }
