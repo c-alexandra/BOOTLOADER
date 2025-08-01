@@ -13,16 +13,20 @@ MAX_FW_LENGTH          = (1024 * 512) - BOOTLOADER_SIZE  # 512KB - 32KB
 AES_BLOCK_SIZE        = 16  # AES block size in bytes
 SIGNATURE_SIZE        = 16  # Size of the signature in bytes
 
+FWINFO_SIZE         = 0x20
 FWINFO_SENTINEL = 0xDEADC0DE  # Sentinel value for firmware info
 FWINFO_SENTINEL_OFFSET = 0x00  # Offset for firmware info sentinel
 FWINFO_DEVICE_ID_OFFSET = 0x04  # Offset for device ID in the firmware info section
 FWINFO_VERSION_OFFSET = 0x08  # Offset for firmware version in the firmware info section
-FWINFO_LENGTH_OFFSET = 0x12  # Offset for firmware length in the firmware info section
+FWINFO_LENGTH_OFFSET = 0x0C  # Offset for firmware length in the firmware info section
+FW_SIGNATURE_OFFSET = VECTOR_TABLE_SIZE + FWINFO_SIZE
 
 signing_key = 0x000102030405060708090A0B0C0D0E0F  # Example signing key, replace with actual key
 signing_iv  = 0x00000000000000000000000000000000
 
-signed_filename = "signed.bin"  # Output filename for the signed firmware
+signed_filename = "signed" + "bin"  # Output filename for the signed firmware
+signing_image_filename = "image-to-be-signed" + ".bin"
+encrypted_image_filename = "encrypted-image" + ".enc"
 
 # Create a temporary firmware image which removes the bootloader and zeros out
 # the key slot.
@@ -44,7 +48,7 @@ with open(sys.argv[1], "rb") as f:
 fw_info_section = firmware_image[VECTOR_TABLE_SIZE:VECTOR_TABLE_SIZE + AES_BLOCK_SIZE * 2]
 
 # DEBUG: Print firmware image and info section 
-# print("Firmware image size: {} bytes".format(len(firmware_image)))
+print("Firmware image size: {} bytes".format(len(firmware_image)))
 # print("Firmware info section size: {} bytes".format(len(fw_info_section)))
 # print("Firmware info: {}".format(fw_info_section))
 
@@ -57,9 +61,6 @@ signing_image = fw_info_section
 signing_image += firmware_image[:VECTOR_TABLE_SIZE]
 signing_image += firmware_image[VECTOR_TABLE_SIZE + AES_BLOCK_SIZE * 3:]
 
-signing_image_filename = "image-to-be-signed" + ".bin"
-encrypted_image_filename = "encrypted-image" + ".enc"
-
 with open(signing_image_filename, "wb") as f:
     f.write(signing_image)
     f.close()
@@ -67,10 +68,9 @@ with open(signing_image_filename, "wb") as f:
 # openssl enc -aes-128-cbc -nosalt -K <key> -iv <IV> -in <input> -out <output
 openssl_command = f"openssl enc -aes-128-cbc -nosalt -K {signing_key:032x} -iv {signing_iv:032x} -in {signing_image_filename} -out {encrypted_image_filename}"
 
-# subprocess.call(openssl_command.split(" "))
 subprocess.run(openssl_command, shell=True)
 
-with open(signing_image_filename, "rb") as f:
+with open(encrypted_image_filename, "rb") as f:
     f.seek(-AES_BLOCK_SIZE, 2) # seek to the last AES block
     signature = f.read()
     f.close()
@@ -84,6 +84,10 @@ print(f"signature = {signature_text}")
 os.remove(signing_image_filename)
 os.remove(encrypted_image_filename)
 
+# write in signature
+# TODO: Understand what the point of this is
+firmware_image[FW_SIGNATURE_OFFSET:FW_SIGNATURE_OFFSET + AES_BLOCK_SIZE] = signature;
+
 with open(signed_filename, "wb") as f:
-    f.write()
+    f.write(firmware_image)
     f.close()

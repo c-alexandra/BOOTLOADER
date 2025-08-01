@@ -14,14 +14,14 @@ static const uint8_t secret_key[AES_BLOCK_SIZE] = {
     0x0C, 0x0D, 0x0E, 0x0F
 };
 
-static void aes_cbc_mac_step(AES_Block_t state, AES_Block_t prev_state, AES_Block_t key) {
+static void aes_cbc_mac_step(AES_Block_t aes_state, AES_Block_t prev_aes_state, const AES_Block_t* key) {
     // cbc chaining operation
     for (uint8_t i = 0; i < AES_BLOCK_SIZE; ++i) {
-        ((uint8_t*)state)[i] ^= ((uint8_t*)prev_state)[i];
+        ((uint8_t*)aes_state)[i] ^= ((uint8_t*)prev_aes_state)[i];
     }
 
-    AES_EncryptBlock(state, &key);
-    memcpy(prev_state, state, AES_BLOCK_SIZE);
+    AES_EncryptBlock(aes_state, key);
+    memcpy(prev_aes_state, aes_state, AES_BLOCK_SIZE);
 }
 
 /*******************************************************************************
@@ -52,11 +52,11 @@ bool validate_firmware_image(void) {
     AES_Block_t round_keys[NUM_ROUND_KEYS_128];
     AES_KeySchedule128(secret_key, round_keys);
 
-    AES_Block_t state = {};
-    AES_Block_t prev_state = {};
+    AES_Block_t aes_state = {0};
+    AES_Block_t prev_aes_state = {0};
 
     // generic padding handler to ensure proper AES block size
-    uint8_t bytes_to_pad = 16 - info->length % AES_BLOCK_SIZE;
+    uint8_t bytes_to_pad = 16 - (info->length % AES_BLOCK_SIZE);
     if (bytes_to_pad == 0) {
         bytes_to_pad = AES_BLOCK_SIZE;
     }
@@ -64,13 +64,13 @@ bool validate_firmware_image(void) {
     // copy firmware info section manually first
     uint32_t fwinfo_offset = 0;
     while (fwinfo_offset < FWINFO_BLOCK_SIZE) {
-        memcpy(state, info + fwinfo_offset, AES_BLOCK_SIZE);
-        aes_cbc_mac_step(state, prev_state, round_keys);
-        fwinfo_offset + AES_BLOCK_SIZE;
+        memcpy(aes_state, info + fwinfo_offset, AES_BLOCK_SIZE);
+        aes_cbc_mac_step(aes_state, prev_aes_state, round_keys);
+        fwinfo_offset += AES_BLOCK_SIZE;
     }
 
     uint32_t offset = 0;
-    while (offset < info->length) {
+    while (offset <= info->length) {
         // skip firmware info and signature block
         if (offset == (FWINFO_ADDRESS - MAIN_APP_START_ADDRESS)) {
             offset += AES_BLOCK_SIZE + FWINFO_BLOCK_SIZE;
@@ -78,27 +78,24 @@ bool validate_firmware_image(void) {
         }
 
         if (info->length - offset > AES_BLOCK_SIZE) { // normal case
-            // normal case
-            memcpy(state, (void*)(MAIN_APP_START_ADDRESS + offset), AES_BLOCK_SIZE);
-            aes_cbc_mac_step(state, prev_state, round_keys);
+            memcpy(aes_state, (void*)(MAIN_APP_START_ADDRESS + offset), AES_BLOCK_SIZE);
+            aes_cbc_mac_step(aes_state, prev_aes_state, round_keys);
         } else { // padding case
             // add whole extra block of passing
             if (bytes_to_pad == 16) {
-                memcpy(state, (void*)(MAIN_APP_START_ADDRESS + offset), AES_BLOCK_SIZE);
-                aes_cbc_mac_step(state, prev_state, round_keys);
+                memcpy(aes_state, (void*)(MAIN_APP_START_ADDRESS + offset), AES_BLOCK_SIZE);
+                aes_cbc_mac_step(aes_state, prev_aes_state, round_keys);
 
-                memset(state, AES_BLOCK_SIZE, AES_BLOCK_SIZE);
-                aes_cbc_mac_step(state, prev_state, round_keys);
+                memset(aes_state, AES_BLOCK_SIZE, AES_BLOCK_SIZE);
+                aes_cbc_mac_step(aes_state, prev_aes_state, round_keys);
             } else { // add padding in-block
-                memcpy(state, (void*)(MAIN_APP_START_ADDRESS + offset), AES_BLOCK_SIZE - bytes_to_pad);
-                memset((void*)state + (AES_BLOCK_SIZE - bytes_to_pad), bytes_to_pad, bytes_to_pad);
-                aes_cbc_mac_step(state, prev_state, round_keys);
+                memcpy(aes_state, (void*)(MAIN_APP_START_ADDRESS + offset), AES_BLOCK_SIZE - bytes_to_pad);
+                memset((void*)aes_state + (AES_BLOCK_SIZE - bytes_to_pad), bytes_to_pad, bytes_to_pad);
+                aes_cbc_mac_step(aes_state, prev_aes_state, round_keys);
             }
         }
         offset += AES_BLOCK_SIZE;
     }
 
-    return memcmp(signature, state, AES_BLOCK_SIZE);
-
-    return true;
+    return memcmp(signature, aes_state, AES_BLOCK_SIZE) == 0;
 }
