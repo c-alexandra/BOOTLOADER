@@ -11,7 +11,7 @@ firmware_info_t firmware_info = {
     .reserved[0] = 0x796e6974,
     .reserved[1] = 0x62756C20,
     .reserved[2] = 0xFFFFFF73,
-    .reserved[3] = 0xFFFFFFFF,
+    .reserved[3] = 0xFFFFFFFF
 };
 
 // prevents linker from optimizing out the firmware_info_t structure

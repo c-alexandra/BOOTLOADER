@@ -20,6 +20,7 @@
 #include "core/simple-timer.h"
 #include "core/shift-register.h"
 #include "core/firmware-info.h"
+#include "core/aes.h"
 
 // Arbitrary sync sequence used to identify the start of a firmware update
 #define SYNC_SEQUENCE_0 (0xC4)

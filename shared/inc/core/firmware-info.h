@@ -17,10 +17,11 @@
 
 // placed after vector table + account for byte alignment 
 #define FWINFO_ADDRESS (ALIGNED(MAIN_APP_START_ADDRESS + sizeof(vector_table_t), 16))
-
 #define FWINFO_VALIDATE_FROM   (ALIGNED(FWINFO_ADDRESS + sizeof(firmware_info_t), 16))
 #define FWINFO_VALIDATE_LENGTH(fw_length) (fw_length - (BOOTLOADER_SIZE - FWINFO_VALIDATE_FROM))
 #define FWINFO_SENTINEL (0xDEADC0DE) // Example sentinel value to identify firmware info structure
+#define FWINFO_BLOCK_SIZE (16 * 2) // size of the firmware info block
+#define FW_SIGNATURE_ADDRESS (ALIGNED(FWINFO_ADDRESS + sizeof(firmware_info_t), 16))
 
 // placed directly after the interrupt vector table in flash
 // check datasheet for exact address and table size

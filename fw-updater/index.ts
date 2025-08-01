@@ -18,7 +18,7 @@ const FLASH_BASE             = (0x08000000); // Flash memory base address
 const BOOTLOADER_SIZE        = (0x00008000); // 32kB bootloader size
 const MAIN_APP_START_ADDRESS = (0x08008000); // 32kB bootloader, so main app starts at 0x08008000
 const VECTOR_TABLE_SIZE      = (0x000001B0); // 2080 bytes, which is the size of the vector table
-const FIRMWARE_INFO_SIZE     = (10 * 4);     // 10 uint32_t values, so 40 bytes
+const FIRMWARE_INFO_SIZE     = (8 * 4);
 
 const BL_PACKET_SYNC_OBSERVED_DATA0      = (0x20);
 const BL_PACKET_FW_UPDATE_REQUEST_DATA0  = (0x31);
@@ -42,7 +42,6 @@ const FWINFO_RESERVED0_OFFSET = (VECTOR_TABLE_SIZE + (4 * 4));
 const FWINFO_RESERVED1_OFFSET = (VECTOR_TABLE_SIZE + (5 * 4));
 const FWINFO_RESERVED2_OFFSET = (VECTOR_TABLE_SIZE + (6 * 4));
 const FWINFO_RESERVED3_OFFSET = (VECTOR_TABLE_SIZE + (7 * 4));
-const FWINFO_RESERVED4_OFFSET = (VECTOR_TABLE_SIZE + (8 * 4));
 const FWINFO_CRC32_OFFSET     = (VECTOR_TABLE_SIZE + (9 * 4));
 const FWINFO_SENTINEL         = (0xDEADC0DE) // Example sentinel value to identify firmware info structure
 
