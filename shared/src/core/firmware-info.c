@@ -70,7 +70,7 @@ bool validate_firmware_image(void) {
     }
 
     uint32_t offset = 0;
-    while (offset <= info->length) {
+    while (offset < info->length) {
         // skip firmware info and signature block
         if (offset == (FWINFO_ADDRESS - MAIN_APP_START_ADDRESS)) {
             offset += AES_BLOCK_SIZE + FWINFO_BLOCK_SIZE;
@@ -97,5 +97,5 @@ bool validate_firmware_image(void) {
         offset += AES_BLOCK_SIZE;
     }
 
-    return memcmp(signature, aes_state, AES_BLOCK_SIZE) == 0;
+    return (memcmp(signature, aes_state, AES_BLOCK_SIZE) == 0);
 }

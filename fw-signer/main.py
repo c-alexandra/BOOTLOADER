@@ -24,7 +24,7 @@ FW_SIGNATURE_OFFSET = VECTOR_TABLE_SIZE + FWINFO_SIZE
 signing_key = 0x000102030405060708090A0B0C0D0E0F  # Example signing key, replace with actual key
 signing_iv  = 0x00000000000000000000000000000000
 
-signed_filename = "signed" + "bin"  # Output filename for the signed firmware
+signed_filename = "signed" + ".bin"  # Output filename for the signed firmware
 signing_image_filename = "image-to-be-signed" + ".bin"
 encrypted_image_filename = "encrypted-image" + ".enc"
 
@@ -43,21 +43,13 @@ with open(sys.argv[1], "rb") as f:
     f.seek(BOOTLOADER_SIZE) # Skip the bootloader section
     firmware_image = bytearray(f.read())
     f.close()
-    
-# slice out just the firmware info section
-fw_info_section = firmware_image[VECTOR_TABLE_SIZE:VECTOR_TABLE_SIZE + AES_BLOCK_SIZE * 2]
-
-# DEBUG: Print firmware image and info section 
-print("Firmware image size: {} bytes".format(len(firmware_image)))
-# print("Firmware info section size: {} bytes".format(len(fw_info_section)))
-# print("Firmware info: {}".format(fw_info_section))
 
 version_hex = int(sys.argv[2], 16)
-struct.pack_into("<I", fw_info_section, FWINFO_VERSION_OFFSET, version_hex)
-struct.pack_into("<I", fw_info_section, FWINFO_LENGTH_OFFSET, len(firmware_image))
+struct.pack_into("<I", firmware_image, VECTOR_TABLE_SIZE + FWINFO_VERSION_OFFSET, version_hex)
+struct.pack_into("<I", firmware_image, VECTOR_TABLE_SIZE + FWINFO_LENGTH_OFFSET, len(firmware_image))
 
 # Apply AES encryption to everything
-signing_image = fw_info_section
+signing_image = firmware_image[VECTOR_TABLE_SIZE:VECTOR_TABLE_SIZE + AES_BLOCK_SIZE * 2]
 signing_image += firmware_image[:VECTOR_TABLE_SIZE]
 signing_image += firmware_image[VECTOR_TABLE_SIZE + AES_BLOCK_SIZE * 3:]
 
@@ -77,12 +69,16 @@ with open(encrypted_image_filename, "rb") as f:
 
 signature_text = "".join(f"{byte:02x}" for byte in signature)
 
+# DEBUG: Print firmware image and info section 
 print(f"Signed firmware version {sys.argv[2]}")
-print(f"key = {signing_key:032x}")
-print(f"signature = {signature_text}")
+print(f"key        = {signing_key:032x}")
+print(f"signature  = {signature_text}")
+print(f"image size = {len(firmware_image):032x} = {len(firmware_image)} bytes")
+# print("Firmware info section size: {} bytes".format(len(fw_info_section)))
+# print("Firmware info: {}".format(fw_info_section))
 
 os.remove(signing_image_filename)
-os.remove(encrypted_image_filename)
+# os.remove(encrypted_image_filename)
 
 # write in signature
 # TODO: Understand what the point of this is
