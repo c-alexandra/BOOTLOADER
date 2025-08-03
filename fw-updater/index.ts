@@ -18,7 +18,7 @@ const FLASH_BASE             = (0x08000000); // Flash memory base address
 const BOOTLOADER_SIZE        = (0x00008000); // 32kB bootloader size
 const MAIN_APP_START_ADDRESS = (0x08008000); // 32kB bootloader, so main app starts at 0x08008000
 const VECTOR_TABLE_SIZE      = (0x000001B0); // 2080 bytes, which is the size of the vector table
-const FIRMWARE_INFO_SIZE     = (10 * 4);     // 10 uint32_t values, so 40 bytes
+const FIRMWARE_INFO_SIZE     = (8 * 4);
 
 const BL_PACKET_SYNC_OBSERVED_DATA0      = (0x20);
 const BL_PACKET_FW_UPDATE_REQUEST_DATA0  = (0x31);
@@ -42,7 +42,6 @@ const FWINFO_RESERVED0_OFFSET = (VECTOR_TABLE_SIZE + (4 * 4));
 const FWINFO_RESERVED1_OFFSET = (VECTOR_TABLE_SIZE + (5 * 4));
 const FWINFO_RESERVED2_OFFSET = (VECTOR_TABLE_SIZE + (6 * 4));
 const FWINFO_RESERVED3_OFFSET = (VECTOR_TABLE_SIZE + (7 * 4));
-const FWINFO_RESERVED4_OFFSET = (VECTOR_TABLE_SIZE + (8 * 4));
 const FWINFO_CRC32_OFFSET     = (VECTOR_TABLE_SIZE + (9 * 4));
 const FWINFO_SENTINEL         = (0xDEADC0DE) // Example sentinel value to identify firmware info structure
 
@@ -321,23 +320,18 @@ const waitForFlashErase = (timeout = LONG_TIMEOUT) => {
 
 // Do everything in an async function so we can have loops, awaits etc
 const main = async () => {
+  if (process.argv.length < 3) {
+    console.log(`usage: ${process.argv[0]} <signed firmware>`);
+    process.exit(1);
+  }
+  const firmwareFilename = process.argv[2];
+
   // calculate the firmware length
   Logger.info('Reading firmware image, calculating firmware length...');
   // throw away the bootloader part of the firmware image
-  const fwImage = await fs.readFile(path.join(process.cwd(), 'firmware.bin'))
-    .then(bin => bin.slice(BL_SIZE));
+  const fwImage = await fs.readFile(path.join(process.cwd(), firmwareFilename));
   const fwLength = fwImage.length;
   Logger.success(`Firmware length is ${fwLength} bytes`);
-
-  Logger.info('Injecting firmware info structure into firmware image...');
-  fwImage.writeUInt32LE(fwLength, FWINFO_LENGTH_OFFSET); // write firmware length
-  fwImage.writeUInt32LE(0x00000001, FWINFO_VERSION_OFFSET); // write firmware version
-
-  // FWINFO_VALIDATE_FROM -> (fwLength - (VECTOR_TABLE_SIZE + FIRMWARE_INFO_SIZE))
-  const crcValue = crc32(fwImage.slice(FWINFO_VALIDATE_FROM), 
-                          fwLength - (VECTOR_TABLE_SIZE + FIRMWARE_INFO_SIZE));
-  Logger.info(`Calculated CRC32 value: 0x${crcValue.toString(16).padStart(8, '0')}`);
-  fwImage.writeUInt32LE(crcValue, FWINFO_CRC32_OFFSET); // write CRC32 value
 
   // Start the bootloader update process
 
@@ -377,6 +371,7 @@ const main = async () => {
 
   // at this point, bootloader should be erasing main application flash
   Logger.info('Main application erasing...');
+  // TODO: Replace with loop
   // await waitForFlashErase();
   // Logger.success('Main application flash erased, ready for data...');
 
